@@ -1,17 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universidad del Sur</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Proyecto académico del portal de inscripciones de la Universidad Horizonte del Sureste.">
+  <title>Inscripciones | Universidad Horizonte del Sureste</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <script src="/Java/index.js" defer></script>
 </head>
 <body>
-  <main>
-    <h1>Universidad del Sur</h1>
-    <p>Pagina principal lista para trabajar desde el servidor.</p>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo">Proyecto académico <span aria-hidden="true">·</span> Universidad y oferta de ejemplo</div>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="brand" aria-label="Universidad Horizonte del Sureste">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
+      </div>
+      <button class="menu-toggle secondary" id="menu-toggle" aria-expanded="false" aria-controls="navigation">Menú</button>
+      <nav id="navigation" aria-label="Navegación principal">
+        <button class="nav-button" data-panel="oferta">Oferta académica</button>
+        <button class="nav-button" data-panel="requisitos">Requisitos</button>
+        <button class="nav-button" data-panel="ayuda">Ayuda</button>
+        <button class="secondary" data-panel="acceso">Ingresar</button>
+      </nav>
+    </div>
+  </header>
+  <main id="contenido" tabindex="-1">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">PORTAL DE INSCRIPCIONES</p>
+          <h1>Tu próximo paso<br>comienza aquí.</h1>
+          <p class="intro">Conoce nuestra oferta académica y prepárate para iniciar tu inscripción en línea, desde un solo lugar.</p>
+          <div class="actions"><button class="primary" data-panel="inscripcion">Iniciar inscripción <span aria-hidden="true">→</span></button><button class="text-button" data-panel="seguimiento">Ya tengo una solicitud</button></div>
+          <p class="small">Nuevo ingreso · Un proceso claro, paso a paso.</p>
+        </div>
+        <aside class="call-card" aria-labelledby="convocatoria-title">
+          <div class="card-top"><span class="eyebrow">NUEVO INGRESO</span><span class="badge">Por confirmar</span></div>
+          <h2 id="convocatoria-title">Próxima convocatoria</h2>
+          <p>Consulta la información antes de comenzar tu trámite.</p>
+          <dl class="dates"><div><dt>Apertura de inscripciones</dt><dd>Por confirmar</dd></div><div><dt>Cierre de inscripciones</dt><dd>Por confirmar</dd></div><div><dt>Costo del trámite</dt><dd>Por confirmar</dd></div></dl>
+          <button class="secondary full" data-panel="convocatoria">Ver información de la convocatoria</button>
+          <p class="small">Las fechas y los costos se publicarán al aprobar la convocatoria.</p>
+        </aside>
+      </div>
+    </section>
+    <section class="container offer" aria-labelledby="offer-title">
+      <div class="section-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h2 id="offer-title">Una carrera para tu futuro</h2></div><p>Explora nuestra oferta de ejemplo.</p></div>
+      <div class="career-grid">
+        <article class="career-card"><span class="career-number" aria-hidden="true">01 / TECNOLOGÍA</span><h3>Ingeniería en Sistemas</h3><p>Crea soluciones digitales que conecten ideas y personas.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="sistemas">Conocer Ingeniería en Sistemas <span aria-hidden="true">↗</span></button></article>
+        <article class="career-card"><span class="career-number" aria-hidden="true">02 / NEGOCIOS</span><h3>Administración</h3><p>Transforma proyectos en organizaciones con propósito.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="administracion">Conocer Administración <span aria-hidden="true">↗</span></button></article>
+        <article class="career-card"><span class="career-number" aria-hidden="true">03 / DISEÑO</span><h3>Diseño Gráfico</h3><p>Comunica ideas a través de experiencias visuales.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="diseno">Conocer Diseño Gráfico <span aria-hidden="true">↗</span></button></article>
+      </div>
+    </section>
+    <section class="container preparation" aria-labelledby="prepare-title">
+      <div><p class="eyebrow">ANTES DE EMPEZAR</p><h2 id="prepare-title">Ten todo a la mano</h2><p>Prepara un correo personal, tus datos académicos y tus documentos digitalizados.</p><button class="text-button" data-panel="requisitos">Consultar requisitos <span aria-hidden="true">→</span></button></div>
+      <ol class="steps"><li><span>01</span><div><h3>Crea tu cuenta</h3><p>Usa un correo al que tengas acceso.</p></div></li><li><span>02</span><div><h3>Completa tu solicitud</h3><p>Ingresa tus datos y documentos.</p></div></li><li><span>03</span><div><h3>Consulta tu avance</h3><p>Revisa observaciones y próximos pasos.</p></div></li></ol>
+    </section>
+    <section class="container support"><div><h2>¿Necesitas orientación?</h2><p>Consulta cómo será el proceso de inscripción.</p></div><button class="secondary" data-panel="ayuda">Recibir ayuda <span aria-hidden="true">↗</span></button></section>
   </main>
-
-  <script src="/Java/index.js"></script>
+  <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div><nav aria-label="Enlaces del pie de página"><button class="footer-button" data-panel="privacidad">Privacidad</button><button class="footer-button" data-panel="personal">Acceso de personal</button></nav></div></footer>
+  <noscript><p class="noscript">Activa JavaScript para consultar los detalles y usar los botones de esta demostración.</p></noscript>
 </body>
 </html>
