@@ -6,6 +6,7 @@ const puerto = 3000;
 
 app.use('/CSS', express.static(path.join(__dirname, 'CSS')));
 app.use('/Java', express.static(path.join(__dirname, 'Java')));
+app.use('/Paginas', express.static(path.join(__dirname, 'Paginas')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'Paginas', 'Pagina_principal.html'));
