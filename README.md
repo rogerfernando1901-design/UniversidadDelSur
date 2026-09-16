@@ -1,4 +1,4 @@
-# Portal UHS · Parte 1: página principal
+# Portal UHS · Página principal e inicio de inscripción
 
 Universidad Horizonte del Sureste (institución ficticia). Proyecto académico de gestión ágil.
 
@@ -32,6 +32,9 @@ No requiere Maven, Gradle, una base de datos ni paquetes externos. No necesitas 
 | Paginas/Pagina_principal.html | Estructura y contenido de la página. |
 | CSS/Pagina_principal.css | Paleta, tipografía y diseño adaptable. |
 | Java/index.js | Rutas fijas de navegación y menú móvil. |
+| Paginas/inscripcion.html | Pantalla inicial de registro del aspirante. |
+| CSS/inscripcion.css | Estilos del registro; reutiliza la paleta de la portada. |
+| Java/inscripcion.js | Validación del correo, contraseña y confirmación; controles de visibilidad. |
 
 El `index.js` de la raíz y la configuración de Node se conservan; el servidor Java utiliza `Java/index.js` para las interacciones de la página.
 
@@ -39,6 +42,8 @@ Java ejecuta el servidor. HTML, CSS y JavaScript componen la interfaz del navega
 
 ## Qué funciona ahora
 
+- Iniciar inscripción abre el formulario de registro: correo válido, contraseña de 12 a 128 caracteres y confirmación coincidente. Los errores aparecen junto a cada campo y en un resumen con foco y enlaces; los datos válidos se conservan al corregir.
+- Mostrar/ocultar contraseñas y revisar el formato de los datos. Esta etapa solo implementa la interfaz: no crea cuentas, no envía correos ni guarda credenciales en el servidor o en almacenamiento local.
 - Página pública con oferta académica, convocatoria, requisitos y orientación.
 - Los botones de contenido navegan a rutas fijas; si el archivo todavía no existe, se muestra un aviso HTTP 404 con un enlace al inicio.
 - Accesos a páginas futuras de las tres carreras de ejemplo.
@@ -76,7 +81,7 @@ El botón Menú conserva su función de abrir y cerrar la navegación móvil; Es
 | Requerimiento | Cobertura de esta entrega |
 |---|---|
 | RF01: oferta y convocatoria | Interfaz pública implementada; catálogo de ejemplo y fechas/costos por confirmar. Aún no hay apertura o cierre de solicitudes en servidor. |
-| RF02: cuenta y acceso | Entradas Ingresar e Iniciar inscripción, con rutas a las páginas futuras. |
+| RF02: cuenta y acceso | Pantalla de registro con validaciones de interfaz. Pendientes: persistencia, verificación de correo, acceso, recuperación y validaciones de servidor. |
 | RF03–RF05: borrador, documentos y envío | Destinos previstos en inscripción y requisitos; sin formularios, carga ni persistencia. |
 | RF06–RF10: observaciones, pago, resolución, seguimiento y constancia | Entrada Ya tengo una solicitud; dirige a la página futura de seguimiento. |
 | RF11–RF12: administración, consulta y auditoría | Entrada Acceso de personal con una ruta a la página futura del personal. |
@@ -91,6 +96,10 @@ Tipografía del sistema, cuerpo de 16 px, secciones de 24 px, tarjetas de 20 px.
 
 ## Personalizar y continuar
 
+Para abrir el registro, ejecuta `java Main.java` desde `UniversidadDelSur` y pulsa **Iniciar inscripción** en la portada, o visita `http://localhost:8080/Paginas/inscripcion.html`. Usa el servidor actualizado que permite servir los archivos de `Paginas`, `CSS` y `Java`.
+
+Prueba con datos ficticios: envía vacío para ver los errores, introduce un correo incorrecto, una contraseña de menos de 12 caracteres y una confirmación diferente. Después prueba `aspirante@example.com` y una frase de 12 a 128 caracteres repetida en ambos campos. El resultado indica que el formato es válido y que todavía no se ha creado una cuenta. El enlace **Ingresar** conserva `/Paginas/acceso.html`, pendiente de implementación. No se solicitan aún datos personales ni archivos del expediente.
+
 - Cambia nombre, textos generales y tarjetas en `Paginas/Pagina_principal.html`.
 - Cambia la paleta en las variables `:root` de `CSS/Pagina_principal.css`.
 - Las rutas de los botones están centralizadas en `Java/index.js`. Conserva los nombres acordados en la tabla siguiente.
@@ -104,6 +113,8 @@ La universidad debe aprobar catálogo, documentos, costos, calendario y contacto
 Es una base funcional local de la portada, no un sistema de inscripciones listo para recibir datos reales. El servidor escucha solo en el equipo local. Una publicación posterior requerirá alojamiento, HTTPS, configuración de producción y los controles de seguridad de los módulos que se implementen.
 
 ## Verificación de esta entrega
+
+Registro: sintaxis de `Java/inscripcion.js` comprobada y validaciones probadas con DOM simulado (campos vacíos, correo inválido, contraseñas de 11/12/128/129 caracteres, coincidencia, conservación de valores, foco y mostrar/ocultar). HTML, CSS y JavaScript entregados por Java con HTTP 200 y contenido idéntico al archivo local. No se ha realizado una revisión visual en navegador real.
 
 Integración de botones comprobada: los 14 botones de contenido invocan la navegación a su destino esperado mediante una prueba de JavaScript con DOM simulado. El servidor actualizado se probó en el puerto 8081: portada y recursos con HTTP 200, un HTML temporal agregado sin cambiar el servidor con HTTP 200, y rutas pendientes o fuera de las carpetas públicas con HTTP 404. El archivo temporal se eliminó. No se probaron clics en un navegador real.
 

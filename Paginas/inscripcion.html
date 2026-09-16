@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Comienza tu registro de nuevo ingreso en el Portal UHS.">
+  <title>Iniciar inscripción | Universidad Horizonte del Sureste</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <script src="/Java/inscripcion.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo">Proyecto académico · Utiliza únicamente datos ficticios</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="Universidad Horizonte del Sureste, inicio">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
+      </a>
+      <a class="back-link" href="/">← Volver al inicio</a>
+    </div>
+  </header>
+  <main class="container registration" id="contenido" tabindex="-1">
+    <div class="registration-heading">
+      <p class="eyebrow">NUEVO INGRESO · PORTAL DE INSCRIPCIONES</p>
+      <h1>Comienza tu inscripción</h1>
+      <p>Tu primer paso es crear una cuenta. Después podrás completar tu expediente y consultar el avance de tu solicitud.</p>
+    </div>
+    <ol class="registration-steps" aria-label="Etapas del registro">
+      <li aria-current="step"><span aria-hidden="true">01</span><div><strong>Crear cuenta</strong><small>Paso actual</small></div></li>
+      <li><span aria-hidden="true">02</span><div><strong>Verificar correo</strong><small>Siguiente paso</small></div></li>
+      <li><span aria-hidden="true">03</span><div><strong>Completar expediente</strong><small>Después de verificar</small></div></li>
+    </ol>
+    <div class="registration-grid">
+      <section class="registration-card" aria-labelledby="account-title">
+        <p class="eyebrow">PASO 01</p>
+        <h2 id="account-title">Datos de tu cuenta</h2>
+        <p>Usa un correo al que tengas acceso. Todos los campos de este formulario son obligatorios.</p>
+        <div class="notice"><strong>Registro en preparación</strong><p>Por ahora puedes revisar el formulario con datos ficticios. Todavía no se crean cuentas ni se envían correos de verificación.</p></div>
+        <noscript><p class="notice">Activa JavaScript para revisar los datos del formulario.</p></noscript>
+        <form id="registration-form" method="post" novalidate>
+          <div id="error-summary" class="error-summary" tabindex="-1" role="alert" hidden>
+            <h3>Revisa estos datos</h3><ul id="error-list"></ul>
+          </div>
+          <div class="field">
+            <label for="email">Correo electrónico <span>(obligatorio)</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required aria-describedby="email-help email-error" placeholder="aspirante@example.com">
+            <p class="field-help" id="email-help">Aquí recibirás el enlace de verificación cuando se habilite el registro.</p>
+            <p class="field-error" id="email-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="password">Contraseña <span>(obligatorio)</span></label>
+            <div class="password-control"><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="password-help password-error"><button class="secondary reveal" type="button" data-toggle="password" aria-controls="password" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button></div>
+            <p class="field-help" id="password-help">Entre 12 y 128 caracteres. Puedes usar una frase larga, pegar una contraseña o usar tu gestor.</p>
+            <p class="field-error" id="password-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="confirmation">Confirma tu contraseña <span>(obligatorio)</span></label>
+            <div class="password-control"><input id="confirmation" name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="confirmation-error"><button class="secondary reveal" type="button" data-toggle="confirmation" aria-controls="confirmation" aria-label="Mostrar confirmación de contraseña" aria-pressed="false">Mostrar</button></div>
+            <p class="field-error" id="confirmation-error" hidden></p>
+          </div>
+          <details class="privacy-note">
+            <summary>Uso de datos en esta demostración</summary>
+            <p>Esta pantalla permite comprobar el formato de datos ficticios dentro del navegador. No envía ni guarda el correo o la contraseña en el servidor ni en el almacenamiento local. Al recargar no se garantiza conservar lo escrito.</p>
+            <p>Antes de habilitar cuentas, se integrarán el aviso de privacidad institucional y el registro de su versión y aceptación.</p>
+          </details>
+          <button class="primary full" id="review-button" type="submit" disabled>Revisar datos de registro</button>
+          <div class="review-result" id="review-result" role="status" tabindex="-1" hidden></div>
+          <p class="account-link">¿Ya tienes una cuenta? <a href="/Paginas/acceso.html">Ingresar</a></p>
+        </form>
+      </section>
+      <aside class="registration-aside" aria-labelledby="next-title">
+        <div class="next-card">
+          <p class="eyebrow">PREPARA TU SIGUIENTE PASO</p>
+          <h2 id="next-title">Tu expediente, paso a paso</h2>
+          <ol class="steps">
+            <li><span aria-hidden="true">1</span><div><h3>Datos personales</h3><p>Identidad y medios de contacto.</p></div></li>
+            <li><span aria-hidden="true">2</span><div><h3>Estudios y carrera</h3><p>Bachillerato de procedencia y oferta disponible.</p></div></li>
+            <li><span aria-hidden="true">3</span><div><h3>Documentos</h3><p>Archivos PDF, JPG o PNG de hasta 5 MB cada uno.</p></div></li>
+            <li><span aria-hidden="true">4</span><div><h3>Revisión y envío</h3><p>Comprueba tus datos antes de solicitar la revisión.</p></div></li>
+          </ol>
+        </div>
+        <div class="notice"><strong>Crear una cuenta no reserva un lugar</strong><p>La inscripción se confirma con documentos y pago aprobados, dentro del periodo correspondiente y con cupo disponible.</p></div>
+        <p class="field-help">Convocatoria, fechas, costos y documentos definitivos: pendientes de confirmación.</p>
+      </aside>
+    </div>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div><a href="/">Volver al inicio</a></div></footer>
+</body>
+</html>
