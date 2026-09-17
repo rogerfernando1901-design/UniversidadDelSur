@@ -1,105 +1,70 @@
-# Tablero Kanban: Detalle del Proyecto UHS
+# Tablero Kanban: Retrospectiva UHS (Simplificado)
 
-Este documento presenta el desglose final de las tareas (todas en estado **DONE/Completado**) como si fueran tarjetas de un tablero Kanban. El proyecto fue realizado por 5 integrantes (I1 a I5), con tareas estrictamente individuales, asegurando que cada persona cubriera áreas específicas y detalladas del sistema.
+Este documento contiene las tareas finales que conformaron el desarrollo del proyecto de la Universidad Horizonte del Sureste, estructurado para un tablero Kanban. 
 
-## 👥 Equipo de Trabajo
-*   **I1:** Arquitecto y DevOps (Servidor, persistencia, flujos globales).
-*   **I2:** Desarrollador Backend Core (APIs, seguridad, auth).
-*   **I3:** Analista y Lógica de Negocio (Control Escolar y validaciones).
-*   **I4:** Desarrollador Frontend Base (UI/UX, vistas estáticas y maquetado).
-*   **I5:** Desarrollador Frontend Funcional (Consumo de APIs, DOM, interactividad).
+Para optimizar el flujo de trabajo entre los **5 integrantes** (I1 a I5), se asignaron **exactamente 2 grandes tareas por persona** (10 tareas en total). Todas las tareas se encuentran actualmente en la columna de **DONE (Completadas)**.
 
 ---
 
-### Tarea 1: Estructura del Servidor Express y Persistencia (I1)
-*   **Descripción:** Configurar el servidor monolítico en Node.js con Express 5. Implementar el sistema de base de datos basado en lectura y escritura de archivos JSON locales (`usuarios.json`, `carreras.json`, `config.json`). Implementar escrituras atómicas usando archivos temporales y renombrado sincrónico para evitar corrupción por concurrencia.
-*   **Asignado a:** I1
-*   **Prioridad:** Crítica 🔥
-*   **Tiempo Estimado:** 8 hrs
+### Integrante 1 (I1): Backend Core e Infraestructura
+**Responsable de la arquitectura principal del servidor y el almacenamiento local.**
 
-### Tarea 2: Diseño Base y Sistema de Páginas Informativas (I4)
-*   **Descripción:** Construir la hoja de estilos global (`paginas.css`) definiendo colores institucionales, tipografías y botones. Crear el header, footer y las vistas HTML estáticas: Inicio, Oferta, Requisitos, Ayuda y Privacidad, garantizando la navegación consistente.
-*   **Asignado a:** I4
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 10 hrs
+*   **Tarea 1: Servidor Express y Base de Datos JSON**
+    *   **Descripción:** Configurar `index.js` con Node.js y Express. Programar las funciones de lectura/escritura seguras hacia los archivos locales (`usuarios.json`, `carreras.json`, `config.json`), garantizando la integridad de datos mediante escrituras atómicas (archivos temporales y `fs.renameSync`). Implementar el manejador de sesiones `express-session`.
+    *   **Prioridad:** Crítica 🔥 | **Tiempo Estimado:** 8 hrs
 
-### Tarea 3: Catálogo de Carreras y Fichas Técnicas (I4)
-*   **Descripción:** Maquetar las páginas descriptivas individuales para las licenciaturas en Sistemas, Diseño y Administración. Incluir información de perfil de egreso y capacidad (cupo). Crear las tarjetas informativas de la convocatoria.
-*   **Asignado a:** I4
-*   **Prioridad:** Media 🟡
-*   **Tiempo Estimado:** 6 hrs
-
-### Tarea 4: Sistema de Autenticación y Registro Funcional (I2)
-*   **Descripción:** Crear las APIs `/api/registro` y `/api/login`. Todos los registros son 100% funcionales. El backend valida el formato de correo. La contraseña debe encriptarse utilizando la librería `bcryptjs` con 10 rondas de 'salt'. Las contraseñas en plano nunca se guardan.
-*   **Asignado a:** I2
-*   **Prioridad:** Crítica 🔥
-*   **Tiempo Estimado:** 8 hrs
-
-### Tarea 5: Manejo de Sesiones del Servidor (I2)
-*   **Descripción:** Implementar la librería `express-session` con cookies para mantener al usuario logueado de manera segura. El backend debe retornar los datos básicos del usuario y su `role` (aspirante, control_escolar, admin) en `/api/sesion` para proteger las rutas.
-*   **Asignado a:** I2
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 5 hrs
-
-### Tarea 6: Motor de Subida de Documentos Probatorios (I1)
-*   **Descripción:** Configurar `multer` para la carga de archivos. Limitar estrictamente el tamaño a 5MB por archivo. Validar por extensión (`.pdf`, `.png`, `.jpeg`) y por MIME type real. Guardar los archivos en el servidor bajo la carpeta dinámica `uploads/[userId]/`.
-*   **Asignado a:** I1
-*   **Prioridad:** Crítica 🔥
-*   **Tiempo Estimado:** 7 hrs
-
-### Tarea 7: Lógica del Estado del Expediente - Motor (I3)
-*   **Descripción:** Diseñar en el backend el ciclo de vida del expediente. Validar que la transición de estados sea estricta: `borrador` -> `enviada` -> `en_revision` -> `con_observaciones` o `aprobada`. Generar el historial de notas automatizado en cada cambio de estado para la auditoría.
-*   **Asignado a:** I3
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 8 hrs
-
-### Tarea 8: Desarrollo del Panel del Aspirante y Captura de Datos (I5)
-*   **Descripción:** Programar `expediente.html` y su lógica en Javascript. Consumir la API para rellenar campos pre-existentes (nombre, fecha de nacimiento, domicilio) y manejar la subida asíncrona de archivos usando el objeto `FormData`, capturando errores del servidor si el archivo excede los 5MB.
-*   **Asignado a:** I5
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 9 hrs
-
-### Tarea 9: Bloqueo Inteligente de Interfaz del Aspirante (I5)
-*   **Descripción:** Programar en `expediente.js` la lógica que bloquea todo el formulario si el estado es `enviada`, `en_revision` o `aprobada`. Si el estado es `con_observaciones`, el código JS debe leer las observaciones específicas de la API y desbloquear únicamente los *inputs* requeridos, marcándolos en rojo e inyectando el motivo de rechazo en la UI.
-*   **Asignado a:** I5
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 8 hrs
-
-### Tarea 10: Prevención de XSS y Sanitización del DOM (I5)
-*   **Descripción:** Auditar y reescribir toda la generación dinámica de tablas en el frontend. Reemplazar el uso inseguro de interpolación (`innerHTML = ${variable}`) por creación segura de nodos usando `document.createElement` y `textContent` en los paneles de control y administración.
-*   **Asignado a:** I5
-*   **Prioridad:** Crítica 🔥
-*   **Tiempo Estimado:** 5 hrs
-
-### Tarea 11: Interfaz de la Bandeja de Control Escolar (I4)
-*   **Descripción:** Maquetar la tabla dinámica `control.html` donde el staff visualiza a los aspirantes. Diseñar la ventana modal que divide la pantalla: a la izquierda la información del usuario, y a la derecha el visualizador del PDF o Imagen del documento subido.
-*   **Asignado a:** I4
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 7 hrs
-
-### Tarea 12: API de Dictamen de Control Escolar (I2)
-*   **Descripción:** Crear el endpoint `POST /api/control/solicitudes/:id/revisar`. Debe validar que las reglas de negocio se cumplan: si un documento se rechaza, es obligatorio incluir una cadena de texto explicando el motivo; si todo está aprobado, cerrar el expediente.
-*   **Asignado a:** I2
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 8 hrs
-
-### Tarea 13: Lógica JS para el Personal de Control Escolar (I3)
-*   **Descripción:** Conectar la interfaz de Control Escolar con la API. Permitir al personal abrir cada documento individual (Acta, Certificado, INE) e inyectar *Radio Buttons* para aprobar o rechazar cada uno, forzando mediante validación JS a rellenar el motivo si se selecciona 'Rechazar' antes de enviar la evaluación al servidor.
-*   **Asignado a:** I3
-*   **Prioridad:** Media 🟡
-*   **Tiempo Estimado:** 7 hrs
-
-### Tarea 14: Panel de Métricas de Administración (I1)
-*   **Descripción:** Desarrollar `GET /api/admin/convocatoria` y su vista. Programar la lectura de datos de todos los usuarios para calcular en tiempo real los totales: aspirantes, lugares ocupados por carrera, expedientes aprobados y rechazados. Mostrar los datos en tarjetas de estadísticas.
-*   **Asignado a:** I1
-*   **Prioridad:** Media 🟡
-*   **Tiempo Estimado:** 6 hrs
-
-### Tarea 15: Edición de Fechas, Cupos y Roles Internos (I3)
-*   **Descripción:** Crear la lógica que permita al administrador actualizar las fechas límite del sistema (validando formato YYYY-MM-DD mediante Expresiones Regulares en backend) y modificar el cupo máximo por licenciatura. Integrar el formulario para crear nuevas cuentas con rol de 'control_escolar', bloqueando la opción de crear 'aspirantes' desde aquí.
-*   **Asignado a:** I3
-*   **Prioridad:** Alta 🔴
-*   **Tiempo Estimado:** 8 hrs
+*   **Tarea 2: Motor de Subida de Documentos (Multer)**
+    *   **Descripción:** Configurar `multer` para la captura de archivos en la carpeta `/uploads/userId`. Validar desde el servidor que los archivos sean estrictamente `PDF`, `JPG` o `PNG` y bloquear cualquier intento de subir archivos mayores a 5MB. Implementar la eliminación del archivo anterior al reemplazar un documento.
+    *   **Prioridad:** Crítica 🔥 | **Tiempo Estimado:** 7 hrs
 
 ---
-*Fin del desglose. Total de tareas: 15. Tareas por integrante: 3. Trabajo estrictamente distribuido.*
+
+### Integrante 2 (I2): Backend Security y Lógica de Negocio
+**Responsable de la seguridad, autenticación y reglas operativas de la API.**
+
+*   **Tarea 3: Autenticación, Registro Seguros y Roles**
+    *   **Descripción:** Crear endpoints de `/api/registro` y `/api/login`. Encriptar todas las contraseñas entrantes usando `bcrypt` (salt 10). Implementar validación estricta de tipos de datos antes de procesar correos. Programar la protección de rutas basándose en el atributo `role` de la sesión.
+    *   **Prioridad:** Crítica 🔥 | **Tiempo Estimado:** 8 hrs
+
+*   **Tarea 4: Lógica de Transición de Estados y Dictamen**
+    *   **Descripción:** Desarrollar la API de revisión para Control Escolar. Programar la lógica que rechaza el dictamen si el revisor no incluye texto en las observaciones de los documentos rechazados. Automatizar el cambio de estados del expediente (`borrador`, `enviada`, `con_observaciones`, `aprobada`) guardando el historial de bitácora en cada cambio.
+    *   **Prioridad:** Alta 🔴 | **Tiempo Estimado:** 8 hrs
+
+---
+
+### Integrante 3 (I3): UI / UX Público (Frontend Base)
+**Responsable de todo lo que el usuario ve antes de iniciar sesión.**
+
+*   **Tarea 5: Sistema de Diseño Global y Maquetado**
+    *   **Descripción:** Crear el archivo maestro `paginas.css`. Definir colores, tipografía, botones, cabecera (Header) y pie de página (Footer) comunes para todo el portal. Asegurar compatibilidad en todas las vistas.
+    *   **Prioridad:** Alta 🔴 | **Tiempo Estimado:** 7 hrs
+
+*   **Tarea 6: Contenido de Páginas Informativas y Fichas**
+    *   **Descripción:** Programar las vistas estáticas HTML requeridas: Inicio, Oferta Académica, Aviso de Privacidad, Requisitos y Preguntas Frecuentes. Crear las fichas técnicas detalladas por cada carrera (Sistemas, Diseño, Administración) respetando la identidad institucional.
+    *   **Prioridad:** Media 🟡 | **Tiempo Estimado:** 6 hrs
+
+---
+
+### Integrante 4 (I4): Interacción de Aspirantes (Frontend Estudiante)
+**Responsable de la captura de datos y experiencia del estudiante logueado.**
+
+*   **Tarea 7: Flujos de Acceso e Inicio del Panel**
+    *   **Descripción:** Conectar `inscripcion.html` y `acceso.html` a la API de Auth usando `fetch()`. Validar formularios HTML nativos y redirigir correctamente. Desarrollar la vista `panel.html` del aspirante mostrando la línea de tiempo y la barra de progreso de su estado.
+    *   **Prioridad:** Alta 🔴 | **Tiempo Estimado:** 7 hrs
+
+*   **Tarea 8: UI del Expediente Electrónico y Bloqueo Inteligente**
+    *   **Descripción:** Programar `expediente.js` para cargar la información previa. Implementar envíos asíncronos (`FormData`) para guardar datos y archivos. Programar el "bloqueo inteligente": si el estado es 'Enviada', desactivar toda la pantalla; si es 'Con Observaciones', habilitar únicamente los campos rechazados en rojo.
+    *   **Prioridad:** Alta 🔴 | **Tiempo Estimado:** 9 hrs
+
+---
+
+### Integrante 5 (I5): Interfaz de Staff y Administración (Frontend Interno)
+**Responsable de los paneles para el personal interno de la Universidad.**
+
+*   **Tarea 9: Interfaz y Modal de Control Escolar**
+    *   **Descripción:** Crear la tabla interactiva de `control.html`. Desarrollar una ventana modal asíncrona que divida la pantalla: el visor del documento a la derecha, y a la izquierda controles radio (Aprobar/Rechazar). Asegurar que JS exija el motivo antes de dejar enviar un rechazo. Reemplazar `innerHTML` por `textContent` para evitar inyecciones XSS en el pintado de la tabla.
+    *   **Prioridad:** Alta 🔴 | **Tiempo Estimado:** 8 hrs
+
+*   **Tarea 10: Dashboard y Configuración del Administrador**
+    *   **Descripción:** Programar `admin_panel.html` y `admin.js`. Pintar tarjetas estadísticas en vivo obtenidas de la API. Programar los formularios donde el administrador puede: modificar fechas de la convocatoria, cambiar el cupo máximo por carrera y registrar directamente cuentas con rol `admin` o `control_escolar`.
+    *   **Prioridad:** Media 🟡 | **Tiempo Estimado:** 7 hrs

@@ -1,78 +1,68 @@
-# Portal de Inscripción - Universidad Horizonte del Sureste (UHS)
+# Manual y Flujo del Sistema - Universidad Horizonte del Sureste
 
-Este proyecto es una plataforma web desarrollada para gestionar el proceso de nuevo ingreso de aspirantes a la universidad. El sistema permite a los futuros estudiantes registrarse, capturar su información, subir documentación probatoria y revisar el estado de su solicitud. A su vez, el personal de control escolar puede revisar, dictaminar y aprobar estas solicitudes.
-
----
-
-## 🚀 Cómo correr y usar el desarrollo
-
-### Requisitos previos
-Para ejecutar este proyecto de manera local, necesitas tener instalado en tu computadora:
-- **Node.js** (versión 18 o superior). Puedes descargarlo desde [nodejs.org](https://nodejs.org/).
-
-### Instalación
-1. Abre una terminal (Símbolo del sistema, PowerShell o Git Bash).
-2. Navega hasta la carpeta del proyecto (donde se encuentra este archivo y el archivo `package.json`):
-   ```bash
-   cd ruta/a/tu/carpeta/UniversidadDelSur
-   ```
-3. Instala las dependencias necesarias ejecutando:
-   ```bash
-   npm install
-   ```
-   *(Esto instalará Express, Multer, express-session, bcryptjs y demás librerías requeridas).*
-
-### Ejecución
-1. En la misma terminal, inicia el servidor con el siguiente comando:
-   ```bash
-   node index.js
-   ```
-2. Verás un mensaje en la terminal indicando que el servidor está corriendo en el puerto 3000.
-3. Abre tu navegador web favorito (Chrome, Edge, Firefox, etc.) y visita:
-   👉 **`http://localhost:3000`**
-
-### Credenciales de Prueba por Defecto
-El sistema pre-carga usuarios administrativos para que puedas probar los distintos roles.
-- **Administrador del Sistema:**
-  - Correo: `admin@uhs.edu.mx`
-  - Contraseña: `admin1234admin`
-- **Personal de Control Escolar:**
-  - Correo: `control@uhs.edu.mx`
-  - Contraseña: `control1234ctrl`
-
-*(Para probar el rol de Aspirante, puedes registrar una cuenta nueva directamente en la página de inicio o en la sección de inscripción).*
+Este documento explica de principio a fin cómo funciona el desarrollo programado, cómo probarlo y la lógica técnica detrás de cada paso del proceso.
 
 ---
 
-## 🔄 Flujo del Sistema
+## 🛠️ Cómo Correr el Proyecto
 
-El desarrollo está construido bajo una arquitectura monolítica con Node.js y Express, con una base de datos basada en archivos locales JSON (carpeta `data/`) para facilitar las demostraciones sin necesidad de configurar motores SQL.
+1.  Abre tu terminal en la carpeta del proyecto.
+2.  Instala las dependencias (solo la primera vez) con: `npm install`
+3.  Inicia el servidor backend ejecutando: `node index.js`
+4.  Abre en tu navegador la dirección: **`http://localhost:3000`**
 
-El flujo principal se divide en tres actores o roles:
+### 🔑 Credenciales Base del Sistema
+El sistema inicializa automáticamente dos cuentas principales para que puedas probar los paneles internos. 
 
-### 1. El Aspirante (Usuario Público)
-- **Registro:** El usuario ingresa a la plataforma, revisa la oferta académica y se registra proporcionando un nombre, correo y contraseña.
-- **Panel de Control:** Una vez dentro, ve una línea de tiempo y un botón para crear/editar su expediente.
-- **Llenado de Expediente:** El aspirante llena sus datos generales (nombre, dirección, fecha de nacimiento, etc.) y selecciona la carrera a la que desea ingresar.
-- **Subida de Documentos:** Sube sus archivos requeridos (Acta de Nacimiento, Certificado de Bachillerato, Identificación Oficial). *Formatos permitidos: PDF, JPG, PNG. Límite: 5MB.*
-- **Envío:** Cuando ha completado todo y subido sus 3 documentos obligatorios, el sistema le permite cambiar el estado de la solicitud de "Borrador" a "Enviada".
-- **Correcciones:** Si Control Escolar encuentra un error en un documento, el aspirante recibe el estado "Con Observaciones". La plataforma **bloquea** los campos aprobados y **solo le permite reemplazar el archivo o dato que fue rechazado**, asegurando la integridad del proceso.
+*   **Administrador del Sistema (Rol: `admin`)**
+    *   **Correo:** `admin@uhs.edu.mx`
+    *   **Contraseña:** `admin1234admin`
+*   **Control Escolar (Rol: `control_escolar`)**
+    *   **Correo:** `control@uhs.edu.mx`
+    *   **Contraseña:** `control1234ctrl`
 
-### 2. Control Escolar (Administración Operativa)
-- Ingresa mediante la URL de `acceso.html` con sus credenciales institucionales.
-- Es redirigido automáticamente a su panel de gestión de solicitudes (`control.html`).
-- **Bandeja de Entrada:** Ve una lista de todos los expedientes que están en estado "Enviada" o "Con Observaciones".
-- **Revisión:** Entra al detalle de un aspirante. Visualiza los datos y puede abrir los documentos PDF o imágenes directamente en el navegador.
-- **Dictamen:** Por cada documento y dato, Control Escolar puede marcarlo como "Aprobado" o "Rechazado". Si rechaza algo, el sistema le **obliga** a escribir un mensaje con la observación (ej. "El certificado está borroso").
-- **Resolución:** Si todo está correcto, puede marcar el expediente como "Aprobada", lo que finaliza el trámite de validación para ese aspirante.
-
-### 3. Administrador del Sistema (Configuración General)
-- Ingresa de igual forma desde la página de acceso, pero es dirigido a `admin_panel.html`.
-- **Panel de Métricas:** Visualiza un resumen (cantidad total de aspirantes, cuántos por carrera, documentos revisados, etc.).
-- **Gestión de Fechas:** Puede modificar las fechas de apertura y cierre de la convocatoria, lo que bloquea o permite el ingreso de nuevos aspirantes en tiempo real.
-- **Gestión de Cupos:** Puede abrir, cerrar o modificar el número de lugares disponibles por carrera académica.
-- **Gestión de Personal:** Puede crear nuevas cuentas con rol de "admin" o "control_escolar" para sus compañeros de trabajo.
+*(Las contraseñas no están en texto plano en la base de datos, están fuertemente encriptadas usando la librería `bcryptjs` con 10 rondas de salt).*
 
 ---
 
-Este flujo asegura un proceso transparente, donde los expedientes físicos y las filas interminables se reemplazan por un proceso 100% auditable y digital, cumpliendo con el objetivo del proyecto planteado en la reunión de descubrimiento.
+## 🔄 Flujo Completo del Sistema Paso a Paso
+
+El desarrollo fue programado utilizando **Node.js con Express** como cerebro central. En lugar de una base de datos pesada, el servidor lee y escribe en archivos locales `.json` (dentro de la carpeta `/data/`). Las sesiones se mantienen vivas usando `express-session` con cookies en el navegador.
+
+A continuación se explica la ruta técnica y funcional del proyecto:
+
+### Paso 1: El Portal Público (Front-End)
+Cualquier visitante puede navegar por las páginas estáticas (Inicio, Oferta, Requisitos, etc.). Todo el diseño visual se controla mediante un único archivo maestro de estilos (`CSS/paginas.css`). Cuando el usuario está listo, hace clic en "Iniciar Inscripción".
+
+### Paso 2: Registro e Inicio de Sesión (Seguridad)
+Al registrarse, el aspirante introduce su correo y una contraseña. 
+*   **Backend:** La ruta `/api/registro` recibe los datos, valida el formato del correo, cifra la contraseña usando `bcrypt` (haciendo imposible que nadie, ni los programadores, la conozcan) y guarda al usuario en `usuarios.json` asignándole automáticamente el rol de `aspirante`. 
+*   Una vez registrado o logueado, se genera una cookie segura y el usuario es redirigido a su panel.
+
+### Paso 3: Llenado del Expediente y Subida de Archivos
+En su panel, el aspirante entra a la sección "Mi Expediente".
+*   Rellena campos de texto (CURP, Domicilio, Fecha de Nacimiento) y selecciona su Carrera.
+*   **Subida (Multer):** El aspirante debe subir obligatoriamente 3 archivos (Acta, Certificado, INE). El backend captura estos archivos mediante la librería `multer`. Se verifica que sean **PDF, JPG o PNG** y que pesen **menos de 5MB**. Si pasan la prueba, se guardan físicamente en el servidor dentro de `/uploads/[ID_USUARIO]/`.
+
+### Paso 4: Envío y Bloqueo de la Solicitud
+Cuando el expediente está completo, el aspirante da clic en "Enviar Solicitud".
+*   El estado interno en la base de datos cambia de `borrador` a `enviada`.
+*   **Javascript Frontend:** Detecta que el estado ya no es borrador y ejecuta un "bloqueo inteligente": desactiva todos los *inputs* de la pantalla, oscurece los botones de guardado y previene cualquier modificación adicional por parte del estudiante.
+
+### Paso 5: Revisión de Control Escolar
+El personal de la universidad entra a `acceso.html` e inicia sesión con el correo `control@uhs.edu.mx`. El sistema detecta su rol y lo envía a su bandeja de solicitudes.
+*   **Evaluación:** Al abrir a un aspirante, ven los datos y los archivos en un visor dual.
+*   **Regla de Negocio Estricta:** El revisor debe aprobar o rechazar cada documento. Si selecciona "Rechazar", el *frontend* le obliga a escribir el motivo exacto del rechazo (ej. "El acta está ilegible").
+*   Al enviar el dictamen al servidor, si hubo rechazos, el estado cambia a `con_observaciones`. Si todo fue aprobado, cambia a `aprobada`.
+
+### Paso 6: Corrección del Aspirante (Flujo Cíclico)
+Si hubo un rechazo, el aspirante entra de nuevo a su expediente (estado `con_observaciones`).
+*   **Desbloqueo Inteligente:** El código Javascript lee cuáles campos fueron rechazados. Mantiene bloqueado todo lo que Control Escolar ya aprobó (para evitar que se manipule), y **solamente desbloquea y resalta en color rojo** el campo o archivo específico que tiene el error, mostrando el mensaje que dejó el revisor.
+*   El aspirante corrige el archivo y vuelve a enviar, regresando al Paso 4.
+
+### Paso 7: Configuración de Administrador
+El director o encargado de sistemas entra con `admin@uhs.edu.mx`.
+*   El backend le entrega las métricas totales leyendo los JSON en vivo.
+*   Desde ahí puede abrir o cerrar el periodo de inscripciones (modificando las fechas de la convocatoria).
+*   Puede ajustar el "Cupo Máximo" de las carreras. Si una carrera se queda sin cupo, automáticamente desaparece del formulario de los aspirantes.
+*   Puede crear nuevas cuentas con acceso administrativo para sus compañeros.
