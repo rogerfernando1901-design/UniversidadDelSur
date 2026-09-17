@@ -47,7 +47,7 @@ function renderErrors(errors) {
   summary.hidden = errors.length === 0;
 }
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
   reviewed = true;
   result.hidden = true;
@@ -57,10 +57,55 @@ form.addEventListener("submit", event => {
     summary.focus();
     return;
   }
-  // Solo validación de interfaz. No persistir contraseñas ni simular cuentas.
-  result.textContent = "Los datos cumplen el formato solicitado. El registro de cuentas aún no está habilitado: no se ha creado una cuenta ni enviado un correo. Podrás continuar cuando esté disponible.";
-  result.hidden = false;
-  result.focus();
+
+  // Enviar al servidor
+  const btn = document.getElementById("review-button");
+  btn.disabled = true;
+  btn.textContent = "Creando cuenta…";
+
+  try {
+    const res = await fetch("/api/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.value.trim(), password: password.value })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      result.textContent = data.error || "Error al crear la cuenta.";
+      result.style.borderColor = "var(--error)";
+      result.style.background = "#FEF2F2";
+      result.style.color = "var(--error)";
+      result.hidden = false;
+      result.focus();
+      btn.disabled = false;
+      btn.textContent = "Revisar datos de registro";
+      return;
+    }
+
+    // Éxito
+    result.style.borderColor = "var(--success)";
+    result.style.background = "#F0FDF4";
+    result.style.color = "var(--success)";
+    result.innerHTML = `<strong>¡Cuenta creada!</strong> ${data.message} <br>Serás redirigido a tu panel en unos segundos.`;
+    result.hidden = false;
+    result.focus();
+
+    // Redirigir al panel
+    setTimeout(() => {
+      window.location.href = data.redirect || "/Paginas/panel.html";
+    }, 2500);
+
+  } catch (err) {
+    result.textContent = "No se pudo conectar con el servidor. Verifica que esté en ejecución.";
+    result.style.borderColor = "var(--error)";
+    result.style.background = "#FEF2F2";
+    result.style.color = "var(--error)";
+    result.hidden = false;
+    result.focus();
+    btn.disabled = false;
+    btn.textContent = "Revisar datos de registro";
+  }
 });
 
 form.addEventListener("input", () => {
@@ -80,3 +125,25 @@ document.querySelectorAll("[data-toggle]").forEach(button => {
 });
 
 document.getElementById("review-button").disabled = false;
+
+// Verificar si ya tiene sesión activa
+(async () => {
+  try {
+    const res = await fetch("/api/sesion");
+    const data = await res.json();
+    if (data.autenticado) {
+      const notice = document.querySelector(".notice");
+      if (notice) {
+        notice.innerHTML = `<strong>Ya tienes una sesión activa</strong><p>Estás conectado como ${data.email}. <a href="/Paginas/panel.html">Ir a tu panel</a> o <a href="#" id="logout-link">cerrar sesión</a> para crear otra cuenta.</p>`;
+        const logoutLink = document.getElementById("logout-link");
+        if (logoutLink) {
+          logoutLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            await fetch("/api/logout", { method: "POST" });
+            window.location.reload();
+          });
+        }
+      }
+    }
+  } catch (_) { /* servidor no disponible */ }
+})();

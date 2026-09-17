@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portal de Personal">
+  <title>Portal de Personal | UHS Portal Interno</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/sesion');
+        const data = await res.json();
+        if (!data.autenticado) {
+          window.location.href = '/Paginas/acceso.html';
+        } else if (data.role === 'admin') {
+          window.location.href = '/Paginas/admin_panel.html';
+        } else if (data.role === 'control_escolar') {
+          window.location.href = '/Paginas/control.html';
+        } else {
+          window.location.href = '/Paginas/panel.html'; // Default for aspirante
+        }
+      } catch (err) {
+        window.location.href = '/Paginas/acceso.html';
+      }
+    });
+  </script>
+</head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; background:var(--background); font-family:sans-serif;">
+  <div style="text-align:center;">
+    <h2 style="color:var(--navy);">Redirigiendo...</h2>
+    <p>Verificando sesión...</p>
+  </div>
+</body>
+</html>

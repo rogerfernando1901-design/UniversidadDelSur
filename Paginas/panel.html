@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel del aspirante">
+  <title>Mi Panel | Universidad Horizonte del Sureste</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <link rel="stylesheet" href="/CSS/panel.css">
+  <script src="/Java/panel.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo">Proyecto académico · Utiliza únicamente datos ficticios</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="Universidad Horizonte del Sureste, inicio" style="text-decoration:none">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
+      </a>
+      <nav class="user-nav" id="user-nav">
+         <span class="user-info" id="nav-user-name"></span>
+         <button id="logout-btn" class="text-button" style="color:white; text-decoration: underline;">Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+  <main class="container panel-page" id="contenido" tabindex="-1">
+    <div class="loading" id="loading-indicator">
+        <div class="spinner"></div>
+        <span>Cargando panel...</span>
+    </div>
+    <div id="panel-content" style="display:none;">
+        <div class="panel-header">
+            <h1 id="welcome-message">Bienvenido</h1>
+            <div style="margin-top:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <span id="status-badge" class="status-badge"></span>
+                <span id="folio-display" style="font-size:16px; font-weight:600; color:var(--navy); display:none; background: #E2E8F0; padding: 4px 12px; border-radius: 16px;"></span>
+            </div>
+        </div>
+
+        <div id="observations-alert" class="notice" style="display:none; background-color: #FEF2F2; border-color: #F87171; color: #991B1B; margin-bottom: 32px;">
+            <h3 style="margin-bottom: 8px; font-size: 16px;">Atención requerida</h3>
+            <p>Tu solicitud tiene observaciones que debes corregir antes de poder continuar.</p>
+            <a href="/Paginas/expediente.html" class="primary" style="display:inline-block; margin-top: 12px;">Corregir expediente</a>
+        </div>
+
+        <div id="success-alert" class="notice" style="display:none; background-color: #F0FDF4; border-color: #4ADE80; color: #166534; margin-bottom: 32px;">
+            <h3 style="margin-bottom: 8px; font-size: 16px;">¡Solicitud Confirmada!</h3>
+            <p>Tu proceso ha sido completado exitosamente. Eres oficialmente alumno de la universidad.</p>
+        </div>
+
+        <div class="progress-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                <span class="progress-label">Progreso del expediente</span>
+                <span class="progress-label" id="progress-text">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h2>Mi Expediente</h2>
+                <div id="expediente-summary" style="margin-bottom: 24px; font-size: 15px; color: var(--muted);"></div>
+                <a href="/Paginas/expediente.html" class="primary" style="display:block; text-align:center; text-decoration:none;">Gestionar Expediente</a>
+            </div>
+            <div class="dashboard-card">
+                <h2>Mis Documentos</h2>
+                <div id="docs-summary"></div>
+            </div>
+            <div class="dashboard-card">
+                <h2>Estado de Solicitud</h2>
+                <p id="status-description" style="color:var(--muted); line-height:1.6; font-size: 15px;"></p>
+            </div>
+            <div class="dashboard-card">
+                <h2>Historial</h2>
+                <ul class="timeline" id="history-timeline"></ul>
+            </div>
+        </div>
+    </div>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div><a href="/" style="color:white;min-height:44px;display:inline-flex;align-items:center">Volver al inicio</a></div></footer>
+</body>
+</html>

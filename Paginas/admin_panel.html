@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel de Administración">
+  <title>Panel de Administración | UHS Portal Interno</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <link rel="stylesheet" href="/CSS/staff.css">
+  <script src="/Java/admin.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo" style="background:var(--blue)">Portal interno · Proyecto académico</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="UHS Portal Interno" style="text-decoration:none">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Portal Interno</strong><span>UNIVERSIDAD</span></div>
+      </a>
+      <nav class="staff-nav" id="staff-nav">
+        <span id="user-name"></span>
+        <button id="logout-btn">Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+  
+  <main class="container staff-page" id="contenido" tabindex="-1">
+    <h1>Panel de Administración</h1>
+    
+    <div class="staff-tabs">
+      <button class="tab-btn active" data-target="tab-resumen">Resumen</button>
+      <button class="tab-btn" data-target="tab-convocatoria">Convocatoria</button>
+      <button class="tab-btn" data-target="tab-carreras">Carreras</button>
+      <button class="tab-btn" data-target="tab-usuarios">Usuarios</button>
+    </div>
+
+    <!-- Tab: Resumen -->
+    <div id="tab-resumen" class="tab-content active">
+      <div class="stat-grid" id="stats-container">
+        <!-- Populated via JS -->
+      </div>
+      <div class="review-section">
+        <h3>Expedientes por Estado</h3>
+        <ul id="stats-estados"></ul>
+      </div>
+    </div>
+
+    <!-- Tab: Convocatoria -->
+    <div id="tab-convocatoria" class="tab-content">
+      <div class="form-section">
+        <h2>Configuración de la Convocatoria</h2>
+        <form id="form-convocatoria">
+          <div class="form-row" style="align-items: center;">
+            <label><input type="checkbox" id="conv-activa"> Convocatoria Activa</label>
+          </div>
+          <div class="form-row">
+            <label>Fecha de Apertura: <input type="date" id="conv-apertura" class="search-input"></label>
+          </div>
+          <div class="form-row">
+            <label>Cierre de Recepción: <input type="date" id="conv-cierre-rec" class="search-input"></label>
+          </div>
+          <div class="form-row">
+            <label>Cierre de Correcciones: <input type="date" id="conv-cierre-cor" class="search-input"></label>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab: Carreras -->
+    <div id="tab-carreras" class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2>Gestión de Carreras</h2>
+        <button id="btn-add-carrera" class="btn btn-primary">Agregar Carrera</button>
+      </div>
+      
+      <div class="form-section" id="form-carrera-container" style="display:none;">
+        <h3 id="form-carrera-title">Nueva Carrera</h3>
+        <form id="form-carrera">
+          <input type="hidden" id="car-id">
+          <div class="form-row">
+            <input type="text" id="car-nombre" class="search-input" placeholder="Nombre de la carrera" required>
+            <input type="text" id="car-campus" class="search-input" placeholder="Campus" required>
+          </div>
+          <div class="form-row">
+            <select id="car-modalidad" class="filter-select" required>
+              <option value="Presencial">Presencial</option>
+              <option value="Escolarizada">Escolarizada</option>
+              <option value="Mixta">Mixta</option>
+              <option value="En línea">En línea</option>
+            </select>
+            <input type="number" id="car-cupo" class="search-input" placeholder="Cupo" required min="1">
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" id="btn-cancel-carrera" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table class="staff-table" id="table-carreras">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Campus</th>
+              <th>Modalidad</th>
+              <th>Cupo</th>
+              <th>Inscritos</th>
+              <th>Disponible</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Usuarios -->
+    <div id="tab-usuarios" class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2>Usuarios Internos</h2>
+        <button id="btn-add-user" class="btn btn-primary">Nuevo Usuario</button>
+      </div>
+
+      <div class="form-section" id="form-user-container" style="display:none;">
+        <h3>Crear Usuario</h3>
+        <form id="form-user">
+          <div class="form-row">
+            <input type="text" id="usr-nombre" class="search-input" placeholder="Nombre completo" required>
+            <input type="email" id="usr-email" class="search-input" placeholder="Correo electrónico" required>
+          </div>
+          <div class="form-row">
+            <input type="password" id="usr-pass" class="search-input" placeholder="Contraseña (mín 12 carac.)" required minlength="12">
+            <select id="usr-rol" class="filter-select" required>
+              <option value="control_escolar">Control Escolar</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" id="btn-cancel-user" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table class="staff-table" id="table-usuarios">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Fecha Creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    
+  </main>
+  
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Universidad Horizonte del Sureste</strong>
+        <p>Portal interno · Proyecto académico 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Confirmar</h3>
+      <p id="modal-msg">¿Estás seguro?</p>
+      <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+        <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="modal-confirm" class="btn btn-danger">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

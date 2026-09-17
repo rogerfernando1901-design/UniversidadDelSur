@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Redirección y seguimiento de solicitud">
+  <title>Seguimiento | Universidad Horizonte del Sureste</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <style>
+    .tracking-container { max-width: 500px; margin: 80px auto; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--line); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .tracking-container h1 { font-size: 24px; color: var(--navy); margin-bottom: 16px; }
+    .tracking-container p { color: var(--muted); margin-bottom: 32px; font-size: 16px; line-height: 1.5; }
+    .loading-spinner { border: 4px solid var(--line); border-top: 4px solid var(--blue); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch('/api/sesion');
+            if (res.ok) {
+                const session = await res.json();
+                if (session.autenticado) {
+                    if (session.role === 'aspirante') {
+                        window.location.href = '/Paginas/panel.html';
+                    } else if (session.role === 'control_escolar') {
+                        window.location.href = '/Paginas/control.html';
+                    } else if (session.role === 'admin') {
+                        window.location.href = '/Paginas/admin_panel.html';
+                    } else {
+                        window.location.href = '/';
+                    }
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('Network error checking session');
+        }
+        
+        // If not authenticated or error
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('message').style.display = 'block';
+    });
+  </script>
+</head>
+<body style="background: var(--background); display: flex; flex-direction: column; min-height: 100vh;">
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo">Portal de inscripciones · Proyecto académico</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="Universidad Horizonte del Sureste, inicio" style="text-decoration:none">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
+      </a>
+    </div>
+  </header>
+  <main class="container" id="contenido" tabindex="-1" style="flex: 1;">
+    <div class="tracking-container">
+        <div id="loading">
+            <div class="loading-spinner"></div>
+            <p>Comprobando sesión...</p>
+        </div>
+        <div id="message" style="display:none;">
+            <h1>Seguimiento de Solicitud</h1>
+            <p>Para consultar el estado de tu solicitud o continuar con tu proceso de inscripción, necesitas iniciar sesión.</p>
+            <a href="/Paginas/acceso.html" class="primary" style="display:inline-block; text-decoration:none; padding: 12px 24px; font-size: 16px;">Iniciar sesión</a>
+            <div style="margin-top: 24px; font-size: 14px;">
+                ¿Aún no has comenzado tu proceso? <a href="/Paginas/inscripcion.html" style="color: var(--blue); font-weight: 600;">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div><a href="/" style="color:white;min-height:44px;display:inline-flex;align-items:center">Volver al inicio</a></div></footer>
+</body>
+</html>

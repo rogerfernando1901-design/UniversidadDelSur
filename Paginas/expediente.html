@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Formulario de expediente del aspirante">
+  <title>Expediente | Universidad Horizonte del Sureste</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <link rel="stylesheet" href="/CSS/panel.css">
+  <script src="/Java/expediente.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo">Proyecto académico · Utiliza únicamente datos ficticios</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="Universidad Horizonte del Sureste, inicio" style="text-decoration:none; flex-grow: 1;">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
+      </a>
+      <nav class="user-nav" id="user-nav">
+         <a href="/Paginas/panel.html" style="color: var(--blue); margin-right: 16px; text-decoration: none; font-size: 14px;">Volver al panel</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container panel-page" id="contenido" tabindex="-1">
+    <div class="loading" id="loading-indicator">
+        <div class="spinner"></div>
+        <span>Cargando expediente...</span>
+    </div>
+    
+    <div id="expediente-content" style="display:none; max-width: 800px; margin: 0 auto;">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <h1>Mi Expediente</h1>
+            <span id="header-status-badge" class="status-badge"></span>
+        </div>
+
+        <div id="general-error" class="notice" style="display:none; background-color: #FEF2F2; border-color: #F87171; color: #991B1B; margin-bottom: 24px;"></div>
+
+        <form id="expediente-form">
+            <div class="form-section">
+                <h2>1. Datos Personales</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="nombre">Nombre(s) *</label>
+                        <input type="text" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="field">
+                        <label for="apellidoPaterno">Apellido Paterno *</label>
+                        <input type="text" id="apellidoPaterno" name="apellidoPaterno" required>
+                    </div>
+                    <div class="field">
+                        <label for="apellidoMaterno">Apellido Materno</label>
+                        <input type="text" id="apellidoMaterno" name="apellidoMaterno">
+                    </div>
+                    <div class="field">
+                        <label for="fechaNacimiento">Fecha de Nacimiento *</label>
+                        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+                    </div>
+                    <div class="field">
+                        <label for="telefono">Teléfono *</label>
+                        <input type="tel" id="telefono" name="telefono" required>
+                    </div>
+                    <div class="field">
+                        <label for="curp">CURP (Opcional)</label>
+                        <input type="text" id="curp" name="curp" pattern="^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}$" title="CURP a 18 caracteres">
+                    </div>
+                </div>
+                <div class="field" style="grid-column: 1 / -1;">
+                    <label for="domicilio">Domicilio completo</label>
+                    <textarea id="domicilio" name="domicilio" rows="2"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>2. Datos Académicos</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="bachillerato">Escuela de Bachillerato de Procedencia *</label>
+                        <input type="text" id="bachillerato" name="bachillerato" required>
+                    </div>
+                    <div class="field">
+                        <label for="carrera">Carrera de Interés *</label>
+                        <select id="carrera" name="carrera" required style="width:100%; border:1px solid var(--border); border-radius:4px; padding:8px; height: 40px; background: white;">
+                            <option value="">Selecciona una carrera...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>3. Documentos Requeridos</h2>
+                <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">Sube tus documentos en formato PDF, JPG o PNG. Tamaño máximo 5MB por archivo.</p>
+                
+                <div class="doc-grid" id="docs-container">
+                    <!-- Docs will be injected here via JS -->
+                </div>
+            </div>
+
+            <div class="form-actions" id="form-actions-container">
+                <button type="button" id="btn-save-draft" class="secondary">Guardar Borrador</button>
+                <button type="submit" id="btn-submit" class="primary">Enviar Solicitud</button>
+            </div>
+            <p id="readonly-message" style="display:none; color: var(--muted); text-align: center; margin-top: 24px; font-weight: 500;">
+                Tu solicitud está en un estado de solo lectura. No se pueden realizar modificaciones.
+            </p>
+        </form>
+    </div>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div><a href="/" style="color:white;min-height:44px;display:inline-flex;align-items:center">Volver al inicio</a></div></footer>
+</body>
+</html>

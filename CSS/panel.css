@@ -1,0 +1,84 @@
+/* Panel layout */
+.panel-page { padding: 32px 0 64px; }
+.panel-header { margin-bottom: 32px; }
+.panel-header h1 { font-size: 28px; letter-spacing: -.5px; color: var(--navy); }
+
+/* Dashboard grid */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.dashboard-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
+.dashboard-card h2 { font-size: 18px; margin-bottom: 16px; color: var(--navy); border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+
+/* Status badges */
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+.status-badge.borrador { background: #F1F5F9; color: var(--muted); border: 1px solid #CBD5E1; }
+.status-badge.enviada { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.status-badge.en_revision { background: #FFF7ED; color: #92400E; border: 1px solid #FED7AA; }
+.status-badge.con_observaciones { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.status-badge.aprobada { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.status-badge.confirmada { background: #17365D; color: white; border: 1px solid var(--navy); }
+
+/* User navigation */
+.user-nav { display: flex; align-items: center; gap: 16px; }
+.user-info { font-size: 14px; color: var(--muted); font-weight: 500; }
+
+/* Stat cards */
+.stat-card { text-align: center; padding: 24px; background: white; border-radius: 8px; border: 1px solid var(--line); }
+.stat-number { font-size: 36px; font-weight: 800; color: var(--navy); line-height: 1.2; }
+.stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Timeline */
+.timeline { list-style: none; padding: 0; margin: 0; border-left: 3px solid var(--line); margin-left: 8px; }
+.timeline li { padding: 0 0 24px 24px; position: relative; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline li::before { content: ''; position: absolute; left: -9px; top: 2px; width: 14px; height: 14px; background: var(--blue); border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.timeline li:first-child::before { background: var(--navy); box-shadow: 0 0 0 2px var(--navy); border: 2px solid white; }
+
+/* Document cards */
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.doc-card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 20px; transition: all 0.2s; position: relative; overflow: hidden; }
+.doc-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: transparent; }
+.doc-card.uploaded { border-color: var(--blue); }
+.doc-card.uploaded::before { background: var(--blue); }
+.doc-card.aprobado { border-color: var(--success); }
+.doc-card.aprobado::before { background: var(--success); }
+.doc-card.rechazado { border-color: var(--error); background: #FEF2F2; }
+.doc-card.rechazado::before { background: var(--error); }
+.doc-card h3 { font-size: 15px; margin-bottom: 8px; color: var(--navy); }
+.doc-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 12px; display: inline-block; background: #F1F5F9; color: var(--muted); }
+.doc-card.aprobado .doc-status { background: #DCFCE7; color: var(--success); }
+.doc-card.rechazado .doc-status { background: #FEE2E2; color: var(--error); }
+.doc-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.doc-upload-area { border: 2px dashed var(--line); border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; background: #F8FAFC; }
+.doc-upload-area:hover { border-color: var(--blue); background: #EFF6FF; }
+
+/* Observation cards */
+.obs-list { list-style: none; padding: 0; }
+.obs-item { padding: 12px 16px; border-left: 4px solid var(--error); background: #FEF2F2; border-radius: 4px; margin-bottom: 12px; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.obs-item.resuelto { border-color: var(--success); background: #F0FDF4; opacity: 0.7; }
+.obs-item strong { display: block; margin-bottom: 4px; color: var(--error); }
+
+/* Form specific */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--line); }
+.form-section { margin-bottom: 40px; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.form-section h2 { font-size: 20px; margin-bottom: 20px; color: var(--navy); border-bottom: 2px solid var(--background); padding-bottom: 10px; }
+
+/* Progress bar */
+.progress-container { margin-bottom: 32px; background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--line); }
+.progress-bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--navy)); border-radius: 5px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-label { font-size: 14px; font-weight: 600; color: var(--navy); }
+
+/* Loading */
+.loading { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 16px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.spinner { width: 40px; height: 40px; border: 4px solid var(--line); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media(max-width:960px) { .dashboard-grid, .form-grid { grid-template-columns: 1fr; } }
+@media(max-width:680px) { 
+  .panel-page { padding: 20px 0 40px; }
+  .form-section { padding: 16px; }
+  .user-nav { flex-direction: column; align-items: flex-end; gap: 4px; }
+}

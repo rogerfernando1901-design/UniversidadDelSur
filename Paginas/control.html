@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel de Control Escolar">
+  <title>Panel de Control Escolar | UHS Portal Interno</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <link rel="stylesheet" href="/CSS/staff.css">
+  <script src="/Java/control.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo" style="background:var(--blue)">Portal interno · Proyecto académico</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/" aria-label="UHS Portal Interno" style="text-decoration:none">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Portal Interno</strong><span>UNIVERSIDAD</span></div>
+      </a>
+      <nav class="staff-nav" id="staff-nav">
+        <span id="user-name"></span>
+        <button id="logout-btn">Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+  <main class="container staff-page" id="contenido" tabindex="-1">
+    
+    <div id="view-list">
+      <h1>Panel de Control Escolar</h1>
+      <div class="staff-filters">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar por nombre o folio...">
+        <select id="status-filter" class="filter-select">
+          <option value="todas">Todas</option>
+          <option value="enviada">Enviadas</option>
+          <option value="con_observaciones">Con observaciones</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="confirmada">Confirmadas</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table class="staff-table" id="solicitudes-table">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Aspirante</th>
+              <th>Carrera</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display: none;">
+          No hay solicitudes que coincidan con la búsqueda.
+        </div>
+      </div>
+    </div>
+
+    <div id="view-detail" style="display: none;">
+      <a href="#" id="back-btn" class="back-button">← Volver a la lista</a>
+      
+      <div class="review-section">
+        <h2 id="detail-name">Nombre del Aspirante</h2>
+        <p><strong>Folio:</strong> <span id="detail-folio"></span></p>
+        <p><strong>Email:</strong> <span id="detail-email"></span></p>
+        <p><strong>Estado actual:</strong> <span id="detail-status" class="badge"></span></p>
+      </div>
+
+      <div class="review-panel">
+        <div class="review-section">
+          <h3>Datos del Aspirante</h3>
+          <div id="datos-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h3>Documentos</h3>
+          <div id="docs-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="review-section">
+        <h3>Historial</h3>
+        <ul id="historial-container">
+          <!-- Populated via JS -->
+        </ul>
+      </div>
+
+      <div class="action-bar" id="action-bar">
+        <!-- Actions populated via JS -->
+      </div>
+    </div>
+    
+  </main>
+  
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Universidad Horizonte del Sureste</strong>
+        <p>Portal interno · Proyecto académico 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Confirmar</h3>
+      <p id="modal-msg">¿Estás seguro?</p>
+      <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+        <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="modal-confirm" class="btn btn-primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
