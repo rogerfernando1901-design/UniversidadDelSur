@@ -337,19 +337,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     const readonlyMsg = document.getElementById('doc-viewer-readonly');
     const radioAprobar = document.getElementById('viewer-radio-aprobar');
     const radioRechazar = document.getElementById('viewer-radio-rechazar');
+    const cardAprobar = document.getElementById('card-decision-aprobar');
+    const cardRechazar = document.getElementById('card-decision-rechazar');
     const obsContainer = document.getElementById('viewer-obs-container');
     const obsInput = document.getElementById('viewer-obs-input');
     const saveBtn = document.getElementById('doc-viewer-save');
     const closeBtn = document.getElementById('doc-viewer-close');
+    const tabLink = document.getElementById('viewer-tab-link');
+    const tabLinkReadonly = document.getElementById('viewer-tab-link-readonly');
+
+    const fileUrl = `/api/control/solicitudes/${currentExpediente.id}/documentos/${tipo}/archivo`;
 
     // Populate viewer
     title.textContent = tipo.replace(/_/g, ' ').toUpperCase();
     subtitle.textContent = `Aspirante: ${currentExpediente.datos?.nombre || ''} ${currentExpediente.datos?.apellidoPaterno || ''}`;
-    iframe.src = `/api/control/solicitudes/${currentExpediente.id}/documentos/${tipo}/archivo`;
+    iframe.src = fileUrl;
+    if (tabLink) tabLink.href = fileUrl;
+    if (tabLinkReadonly) tabLinkReadonly.href = fileUrl;
 
     const isRevisable = currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision';
     reviewControls.style.display = isRevisable ? 'block' : 'none';
     readonlyMsg.style.display = isRevisable ? 'none' : 'block';
+
+    const updateCardSelection = () => {
+      if (cardAprobar) cardAprobar.classList.toggle('selected', radioAprobar.checked);
+      if (cardRechazar) cardRechazar.classList.toggle('selected', radioRechazar.checked);
+    };
 
     // Restore previous decision if any
     const prev = viewerDecisions.get(tipo);
@@ -357,10 +370,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     radioRechazar.checked = prev ? !prev.aprobado : false;
     obsInput.value = prev && !prev.aprobado ? (prev.observacion || '') : '';
     obsContainer.style.display = (prev && !prev.aprobado) ? 'block' : 'none';
+    updateCardSelection();
 
     // Radio change handlers
-    radioAprobar.onchange = () => { obsContainer.style.display = 'none'; };
-    radioRechazar.onchange = () => { obsContainer.style.display = 'block'; obsInput.focus(); };
+    radioAprobar.onchange = () => {
+      obsContainer.style.display = 'none';
+      updateCardSelection();
+    };
+    radioRechazar.onchange = () => {
+      obsContainer.style.display = 'block';
+      updateCardSelection();
+      obsInput.focus();
+    };
 
     // Save decision
     saveBtn.onclick = () => {

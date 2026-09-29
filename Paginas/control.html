@@ -133,38 +133,48 @@
     <div class="doc-viewer-container">
       <!-- Panel izquierdo: controles de revisión -->
       <div class="doc-viewer-controls">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <h3 id="doc-viewer-title" style="margin:0; font-size:1rem;">Documento</h3>
-          <button id="doc-viewer-close" class="btn btn-secondary" aria-label="Cerrar visor">✕ Cerrar</button>
+        <div class="doc-viewer-header">
+          <div class="doc-viewer-title-group">
+            <h3 id="doc-viewer-title">Documento</h3>
+            <p id="doc-viewer-subtitle">Aspirante</p>
+          </div>
+          <button id="doc-viewer-close" class="doc-viewer-close-btn" aria-label="Cerrar visor">✕ Cerrar</button>
         </div>
-        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1.5rem;" id="doc-viewer-subtitle"></p>
         
         <div id="doc-viewer-review-controls">
-          <p style="font-weight:600; margin-bottom:0.75rem;">Decisión:</p>
-          <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; cursor:pointer;">
-            <input type="radio" name="viewer-decision" value="aprobar" id="viewer-radio-aprobar"> Aprobar documento
-          </label>
-          <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; cursor:pointer;">
-            <input type="radio" name="viewer-decision" value="rechazar" id="viewer-radio-rechazar"> Rechazar documento
-          </label>
-          
-          <div id="viewer-obs-container" style="display:none;">
-            <label style="font-weight:500; font-size:0.9rem;">Motivo de rechazo <span style="color:var(--error)">*</span></label>
-            <textarea id="viewer-obs-input" rows="3" placeholder="Describe el motivo de rechazo..." style="width:100%; margin-top:0.5rem; padding:0.5rem; border:1px solid var(--border); border-radius:4px; font-family:inherit; font-size:0.9rem; resize:vertical;"></textarea>
+          <p style="font-weight:700; margin:0 0 0.75rem 0; color:var(--navy); font-size:0.95rem;">Decisión de Revisión:</p>
+          <div class="decision-card-group">
+            <label class="decision-card approve-card" id="card-decision-aprobar">
+              <input type="radio" name="viewer-decision" value="aprobar" id="viewer-radio-aprobar">
+              <span>✓ Aprobar Documento</span>
+            </label>
+            <label class="decision-card reject-card" id="card-decision-rechazar">
+              <input type="radio" name="viewer-decision" value="rechazar" id="viewer-radio-rechazar">
+              <span>✕ Rechazar Documento</span>
+            </label>
           </div>
           
-          <button id="doc-viewer-save" class="btn btn-primary" style="width:100%; margin-top:1rem;">Guardar decisión</button>
+          <div id="viewer-obs-container" class="reject-reason-box" style="display:none;">
+            <label for="viewer-obs-input">Motivo de rechazo (obligatorio) *</label>
+            <textarea id="viewer-obs-input" rows="3" placeholder="Describe claramente qué debe corregir el aspirante..."></textarea>
+          </div>
+          
+          <div class="doc-viewer-actions">
+            <button id="doc-viewer-save" class="btn btn-primary btn-save">Guardar Decisión</button>
+            <a id="viewer-tab-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-tab-link">↗ Abrir en pestaña nueva</a>
+          </div>
         </div>
 
         <!-- Muestra cuando el expediente no está en revisión -->
-        <div id="doc-viewer-readonly" style="display:none;">
-          <p style="color:var(--muted); font-size:0.9rem;">Este expediente no está en estado de revisión activa. Solo puedes ver el documento.</p>
+        <div id="doc-viewer-readonly" style="display:none; padding:1.25rem; background:#f1f5f9; border-radius:8px; margin-top:1rem;">
+          <p style="color:var(--muted); font-size:0.9rem; margin:0 0 1rem 0; line-height:1.5;">Este expediente no está en periodo de revisión activa. Puedes consultar el archivo a la derecha.</p>
+          <a id="viewer-tab-link-readonly" href="#" target="_blank" rel="noopener noreferrer" class="btn-tab-link" style="font-weight:600;">↗ Abrir en pestaña completa</a>
         </div>
       </div>
       
       <!-- Panel derecho: iframe del documento -->
       <div class="doc-viewer-iframe-panel">
-        <iframe id="doc-viewer-iframe" src="" title="Documento del aspirante" style="width:100%; height:100%; border:none; border-radius:0 8px 8px 0;"></iframe>
+        <iframe id="doc-viewer-iframe" src="" title="Documento del aspirante"></iframe>
       </div>
     </div>
   </div>
