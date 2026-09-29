@@ -10,6 +10,37 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Simple in-memory rate limiter (no external deps)
+const rateLimitStore = new Map();
+function rateLimit(maxRequests, windowMs) {
+  return (req, res, next) => {
+    const key = req.ip || req.socket.remoteAddress;
+    const now = Date.now();
+    const record = rateLimitStore.get(key) || { count: 0, start: now };
+    if (now - record.start > windowMs) {
+      record.count = 1;
+      record.start = now;
+    } else {
+      record.count++;
+    }
+    rateLimitStore.set(key, record);
+    if (record.count > maxRequests) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera un momento antes de intentarlo de nuevo.' });
+    }
+    next();
+  };
+}
+const loginLimiter = rateLimit(10, 5 * 60 * 1000); // 10 requests per 5 minutes
+
 /* ═══════════════════════════════════════════════════════════
    Almacenamiento JSON en disco
    ═══════════════════════════════════════════════════════════ */
@@ -72,7 +103,7 @@ initData();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  secret: "uhs-portal-dev-2026-secreto",
+  secret: process.env.SESSION_SECRET || "uhs-portal-dev-2026-secreto",
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "lax" }
@@ -130,7 +161,7 @@ app.get("/index.html", (_req, res) => res.redirect("/"));
    ═══════════════════════════════════════════════════════════ */
 
 // Registro de aspirante
-app.post("/api/registro", async (req, res) => {
+app.post("/api/registro", loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Correo y contraseña son obligatorios." });
   if (typeof email !== "string" || typeof password !== "string") {
@@ -175,7 +206,7 @@ app.post("/api/registro", async (req, res) => {
 });
 
 // Inicio de sesión
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Correo y contraseña son obligatorios." });
   if (typeof email !== "string" || typeof password !== "string") {
@@ -200,7 +231,10 @@ app.post("/api/login", async (req, res) => {
 
 // Cerrar sesión
 app.post("/api/logout", (req, res) => {
-  req.session.destroy(() => res.json({ ok: true }));
+  req.session.destroy(() => {
+    res.clearCookie("connect.sid");
+    res.json({ ok: true });
+  });
 });
 
 // Estado de sesión
@@ -589,6 +623,9 @@ app.post("/api/admin/usuarios", requireRole("admin"), async (req, res) => {
     return res.status(400).json({ error: "Datos de entrada inválidos." });
   }
   if (!["control_escolar", "admin"].includes(role)) return res.status(400).json({ error: "Rol no válido." });
+  if (!nombre || nombre.trim().length < 2 || nombre.trim().length > 100) {
+    return res.status(400).json({ error: "El nombre debe tener entre 2 y 100 caracteres." });
+  }
   if (password.length < 12) return res.status(400).json({ error: "La contraseña debe tener al menos 12 caracteres." });
 
   const hash = await bcrypt.hash(password, 10);
@@ -681,7 +718,9 @@ app.get("/api/admin/estadisticas", requireRole("admin"), (_req, res) => {
   const stats = {
     totalAspirantes: usuarios.filter(u => u.role === "aspirante").length,
     expedientesPorEstado: {},
-    carrerasResumen: carreras.map(c => ({ id: c.id, nombre: c.nombre, cupo: c.cupo, inscritos: c.inscritos, disponible: c.cupo - c.inscritos }))
+    carrerasResumen: Object.fromEntries(
+      carreras.map(c => [c.nombre, c.cupo - c.inscritos])
+    )
   };
   for (const e of expedientes) {
     stats.expedientesPorEstado[e.estado] = (stats.expedientesPorEstado[e.estado] || 0) + 1;

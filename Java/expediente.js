@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Load Expediente
         const res = await fetch('/api/expediente');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || 'No se pudo cargar el expediente.');
+        }
         currentExpediente = await res.json();
         
         document.getElementById('loading-indicator').style.display = 'none';

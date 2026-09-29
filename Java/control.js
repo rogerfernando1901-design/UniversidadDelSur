@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Revisión enviada');
         openDetail(currentExpediente.id); // Reload
       } else {
-        showToast('Error al enviar', 'error');
+        showToast(data.error || 'Error al enviar revisión', 'error');
       }
     } catch (err) {
       showToast('Error de red', 'error');

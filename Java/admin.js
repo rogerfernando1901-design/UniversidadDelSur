@@ -79,21 +79,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       container.appendChild(totalCard);
 
       if (data.carrerasResumen) {
-        Object.entries(data.carrerasResumen).forEach(([carrera, cantidad]) => {
+        Object.entries(data.carrerasResumen).forEach(([carrera, disponible]) => {
           const card = document.createElement('div');
           card.className = 'stat-card';
           
           const numDiv = document.createElement('div');
           numDiv.className = 'number';
-          numDiv.textContent = cantidad;
+          numDiv.textContent = disponible;
           
           const nameDiv = document.createElement('div');
-          nameDiv.textContent = carrera;
+          nameDiv.textContent = `${carrera} (disponibles)`;
           
           card.appendChild(numDiv);
           card.appendChild(nameDiv);
           container.appendChild(card);
         });
+      }
+
+      // Total inscritos count
+      const confirmadasCount = (data.expedientesPorEstado && data.expedientesPorEstado['confirmada']) || 0;
+      if (confirmadasCount > 0) {
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        const numDiv = document.createElement('div');
+        numDiv.className = 'number';
+        numDiv.textContent = confirmadasCount;
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = 'Inscritos Confirmados';
+        card.appendChild(numDiv);
+        card.appendChild(nameDiv);
+        container.appendChild(card);
       }
       
       const ul = document.getElementById('stats-estados');

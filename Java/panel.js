@@ -70,17 +70,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Docs summary
         const docsSummary = document.getElementById('docs-summary');
+        docsSummary.innerHTML = '';
         if (expediente.documentos && expediente.documentos.length > 0) {
-            docsSummary.innerHTML = expediente.documentos.map(d => `
-                <div style="margin-bottom:12px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; display:flex; justify-content:space-between; align-items: center;">
-                    <span style="font-size: 14px; font-weight: 500;">${formatDocType(d.tipo)}</span> 
-                    <span class="doc-status" style="background: ${getDocStatusColor(d.estado).bg}; color: ${getDocStatusColor(d.estado).color}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">
-                        ${formatDocStatus(d.estado)}
-                    </span>
-                </div>
-            `).join('');
+            expediente.documentos.forEach(d => {
+                const row = document.createElement('div');
+                row.style.cssText = 'margin-bottom:12px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; display:flex; justify-content:space-between; align-items: center;';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.style.cssText = 'font-size: 14px; font-weight: 500;';
+                nameSpan.textContent = formatDocType(d.tipo);
+                
+                const statusColors = getDocStatusColor(d.estado);
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'doc-status';
+                statusSpan.style.cssText = `background: ${statusColors.bg}; color: ${statusColors.color}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;`;
+                statusSpan.textContent = formatDocStatus(d.estado);
+                
+                row.appendChild(nameSpan);
+                row.appendChild(statusSpan);
+                docsSummary.appendChild(row);
+            });
         } else {
-            docsSummary.innerHTML = '<p style="color:var(--muted); font-size: 14px;">Aún no has subido documentos.</p>';
+            const p = document.createElement('p');
+            p.style.cssText = 'color:var(--muted); font-size: 14px;';
+            p.textContent = 'Aún no has subido documentos.';
+            docsSummary.appendChild(p);
         }
 
         // Status description
@@ -99,13 +113,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (expediente.historial && expediente.historial.length > 0) {
             // Reverse history to show newest first
             const sortedHistory = [...expediente.historial].reverse();
-            timeline.innerHTML = sortedHistory.map(h => `
-                <li>
-                    <strong style="color: var(--navy);">${formatEstado(h.estado)}</strong> 
-                    <span style="color:var(--muted);font-size:12px; margin-left: 8px;">${new Date(h.fecha).toLocaleDateString()}</span>
-                    ${h.nota ? `<p style="font-size:13px;margin-top:4px;color:var(--muted); line-height: 1.4;">${h.nota}</p>` : ''}
-                </li>
-            `).join('');
+            timeline.innerHTML = '';
+            sortedHistory.forEach(h => {
+                const li = document.createElement('li');
+                
+                const strong = document.createElement('strong');
+                strong.style.color = 'var(--navy)';
+                strong.textContent = formatEstado(h.estado);
+                li.appendChild(strong);
+                
+                const dateSpan = document.createElement('span');
+                dateSpan.style.cssText = 'color:var(--muted);font-size:12px; margin-left: 8px;';
+                dateSpan.textContent = new Date(h.fecha).toLocaleDateString();
+                li.appendChild(dateSpan);
+                
+                if (h.nota) {
+                    const p = document.createElement('p');
+                    p.style.cssText = 'font-size:13px;margin-top:4px;color:var(--muted); line-height: 1.4;';
+                    p.textContent = h.nota;
+                    li.appendChild(p);
+                }
+                
+                timeline.appendChild(li);
+            });
         } else {
             timeline.innerHTML = '<li style="color:var(--muted);">Sin historial de cambios</li>';
         }
