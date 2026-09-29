@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentExpediente = null;
   let revisiones = [];
   let observacionesDatos = [];
+  
+  // Viewer state: tracks per-doc decisions made inside the viewer
+  const viewerDecisions = new Map(); // tipo -> { aprobado: bool, observacion: string }
 
   // Check auth
   try {
@@ -242,86 +245,176 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const renderDocs = () => {
     docsContainer.innerHTML = '';
-    if (!currentExpediente.documentos || (Array.isArray(currentExpediente.documentos) ? currentExpediente.documentos.length === 0 : Object.keys(currentExpediente.documentos).length === 0)) {
+    const docs = currentExpediente.documentos;
+    if (!docs || (Array.isArray(docs) ? docs.length === 0 : Object.keys(docs).length === 0)) {
       docsContainer.innerHTML = '<p>No hay documentos subidos.</p>';
       return;
     }
 
     const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion'];
+    const isRevisable = currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision';
+
     docTipos.forEach(tipo => {
-      const doc = Array.isArray(currentExpediente.documentos) 
-        ? currentExpediente.documentos.find(d => d.tipo === tipo) 
-        : currentExpediente.documentos[tipo];
+      const doc = Array.isArray(docs)
+        ? docs.find(d => d.tipo === tipo)
+        : docs[tipo];
       if (!doc) return;
 
       const card = document.createElement('div');
       card.className = 'review-doc';
-      
+      card.dataset.tipo = tipo;
+
+      // Header row
       const header = document.createElement('div');
       header.style.display = 'flex';
       header.style.justifyContent = 'space-between';
-      header.style.marginBottom = '1rem';
-      
+      header.style.alignItems = 'center';
+      header.style.marginBottom = '0.75rem';
+
       const title = document.createElement('strong');
-      title.textContent = tipo.replace('_', ' ').toUpperCase();
-      
-      const btnVer = document.createElement('a');
-      btnVer.className = 'btn btn-primary';
-      btnVer.textContent = 'Ver documento';
-      btnVer.href = `/api/control/solicitudes/${currentExpediente.id}/documentos/${tipo}/archivo`;
-      btnVer.target = '_blank';
-      
+      title.textContent = tipo.replace(/_/g, ' ').toUpperCase();
       header.appendChild(title);
-      header.appendChild(btnVer);
+
+      // Badge for current doc state
+      const badge = document.createElement('span');
+      badge.className = `badge ${doc.estado || 'pendiente'}`;
+      badge.textContent = (doc.estado || 'pendiente').toUpperCase();
+      header.appendChild(badge);
       card.appendChild(header);
-      
-      if (currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision') {
-        const actions = document.createElement('div');
-        actions.style.display = 'flex';
-        actions.style.gap = '1rem';
-        actions.style.alignItems = 'center';
-        
-        const lblAprobar = document.createElement('label');
-        lblAprobar.innerHTML = `<input type="radio" name="doc_${tipo}" value="aprobar"> Aprobar`;
-        
-        const lblRechazar = document.createElement('label');
-        lblRechazar.innerHTML = `<input type="radio" name="doc_${tipo}" value="rechazar"> Rechazar`;
-        
-        const obsInput = document.createElement('input');
-        obsInput.type = 'text';
-        obsInput.placeholder = 'Motivo de rechazo...';
-        obsInput.style.display = 'none';
-        obsInput.className = 'search-input';
-        
-        lblRechazar.querySelector('input').addEventListener('change', (e) => {
-          obsInput.style.display = e.target.checked ? 'block' : 'none';
-        });
-        lblAprobar.querySelector('input').addEventListener('change', (e) => {
-          obsInput.style.display = e.target.checked ? 'none' : 'block';
-        });
 
-        // Store references for the submit action
-        card.dataset.tipo = tipo;
-        card.getReviewData = () => {
-          const isAprobado = lblAprobar.querySelector('input').checked;
-          const isRechazado = lblRechazar.querySelector('input').checked;
-          if (!isAprobado && !isRechazado) return null;
-          
-          return {
-            campo: tipo,
-            aprobado: isAprobado,
-            observacion: isRechazado ? obsInput.value : ''
-          };
+      // Decision indicator (shown after viewer decision is made)
+      const decisionIndicator = document.createElement('div');
+      decisionIndicator.id = `decision-indicator-${tipo}`;
+      decisionIndicator.style.cssText = 'display:none; font-size:0.85rem; margin-bottom:0.75rem; padding:6px 10px; border-radius:4px;';
+      card.appendChild(decisionIndicator);
+
+      // Action buttons row
+      const actions = document.createElement('div');
+      actions.style.display = 'flex';
+      actions.style.gap = '0.5rem';
+      actions.style.flexWrap = 'wrap';
+
+      // "Ver y Revisar" button — opens the iframe viewer
+      const btnViewer = document.createElement('button');
+      btnViewer.className = 'btn btn-primary';
+      btnViewer.textContent = '📄 Ver y Revisar';
+      btnViewer.onclick = () => openDocViewer(tipo, doc);
+      actions.appendChild(btnViewer);
+
+      // Fallback: open in new tab
+      const btnTab = document.createElement('a');
+      btnTab.className = 'btn btn-secondary';
+      btnTab.textContent = '↗ Nueva pestaña';
+      btnTab.href = `/api/control/solicitudes/${currentExpediente.id}/documentos/${tipo}/archivo`;
+      btnTab.target = '_blank';
+      btnTab.rel = 'noopener noreferrer';
+      actions.appendChild(btnTab);
+
+      card.appendChild(actions);
+
+      // Store reference for submitReview to pick up decisions from the map
+      card.getReviewData = () => {
+        const decision = viewerDecisions.get(tipo);
+        if (!decision) return null;
+        return {
+          campo: tipo,
+          aprobado: decision.aprobado,
+          observacion: decision.observacion || ''
         };
+      };
 
-        actions.appendChild(lblAprobar);
-        actions.appendChild(lblRechazar);
-        card.appendChild(actions);
-        card.appendChild(obsInput);
-      }
-      
       docsContainer.appendChild(card);
     });
+  };
+
+  // ── RF3.3: Integrated Document Viewer ───────────────────
+  const openDocViewer = (tipo, doc) => {
+    const modal = document.getElementById('doc-viewer-modal');
+    const iframe = document.getElementById('doc-viewer-iframe');
+    const title = document.getElementById('doc-viewer-title');
+    const subtitle = document.getElementById('doc-viewer-subtitle');
+    const reviewControls = document.getElementById('doc-viewer-review-controls');
+    const readonlyMsg = document.getElementById('doc-viewer-readonly');
+    const radioAprobar = document.getElementById('viewer-radio-aprobar');
+    const radioRechazar = document.getElementById('viewer-radio-rechazar');
+    const obsContainer = document.getElementById('viewer-obs-container');
+    const obsInput = document.getElementById('viewer-obs-input');
+    const saveBtn = document.getElementById('doc-viewer-save');
+    const closeBtn = document.getElementById('doc-viewer-close');
+
+    // Populate viewer
+    title.textContent = tipo.replace(/_/g, ' ').toUpperCase();
+    subtitle.textContent = `Aspirante: ${currentExpediente.datos?.nombre || ''} ${currentExpediente.datos?.apellidoPaterno || ''}`;
+    iframe.src = `/api/control/solicitudes/${currentExpediente.id}/documentos/${tipo}/archivo`;
+
+    const isRevisable = currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision';
+    reviewControls.style.display = isRevisable ? 'block' : 'none';
+    readonlyMsg.style.display = isRevisable ? 'none' : 'block';
+
+    // Restore previous decision if any
+    const prev = viewerDecisions.get(tipo);
+    radioAprobar.checked = prev ? prev.aprobado : false;
+    radioRechazar.checked = prev ? !prev.aprobado : false;
+    obsInput.value = prev && !prev.aprobado ? (prev.observacion || '') : '';
+    obsContainer.style.display = (prev && !prev.aprobado) ? 'block' : 'none';
+
+    // Radio change handlers
+    radioAprobar.onchange = () => { obsContainer.style.display = 'none'; };
+    radioRechazar.onchange = () => { obsContainer.style.display = 'block'; obsInput.focus(); };
+
+    // Save decision
+    saveBtn.onclick = () => {
+      if (!radioAprobar.checked && !radioRechazar.checked) {
+        showToast('Selecciona Aprobar o Rechazar antes de guardar.', 'error');
+        return;
+      }
+      const aprobado = radioAprobar.checked;
+      const observacion = radioRechazar.checked ? obsInput.value.trim() : '';
+      if (!aprobado && !observacion) {
+        showToast('Escribe el motivo de rechazo.', 'error');
+        obsInput.focus();
+        return;
+      }
+
+      viewerDecisions.set(tipo, { aprobado, observacion });
+
+      // Update indicator on the doc card
+      const indicator = document.getElementById(`decision-indicator-${tipo}`);
+      if (indicator) {
+        indicator.style.display = 'block';
+        if (aprobado) {
+          indicator.style.background = '#F0FDF4';
+          indicator.style.color = '#166534';
+          indicator.style.border = '1px solid #4ADE80';
+          indicator.textContent = '✓ Marcado como APROBADO';
+        } else {
+          indicator.style.background = '#FEF2F2';
+          indicator.style.color = '#991B1B';
+          indicator.style.border = '1px solid #F87171';
+          indicator.textContent = `✗ Marcado como RECHAZADO: "${observacion}"`;
+        }
+      }
+
+      showToast(`Decisión guardada: ${aprobado ? 'Aprobado' : 'Rechazado'}`);
+      modal.classList.remove('active');
+      iframe.src = '';
+    };
+
+    // Close button
+    closeBtn.onclick = () => {
+      modal.classList.remove('active');
+      iframe.src = '';
+    };
+
+    // Click outside to close
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        iframe.src = '';
+      }
+    };
+
+    modal.classList.add('active');
   };
 
   const renderHistorial = () => {
@@ -390,6 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       const data = await res.json();
       if (data.ok) {
+        viewerDecisions.clear();
         showToast('Revisión enviada');
         openDetail(currentExpediente.id); // Reload
       } else {
