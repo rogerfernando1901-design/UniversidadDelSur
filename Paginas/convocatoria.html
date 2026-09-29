@@ -29,25 +29,31 @@
     
     <div class="container info-page">
       <section class="info-section">
-        <h2>Fechas Importantes</h2>
+        <h2>Fechas y Costo Oficial</h2>
         <div class="info-grid">
           <div class="info-card" style="text-align:center;">
             <div style="font-size:2rem;margin-bottom:8px;">📅</div>
             <h3>Apertura del Registro</h3>
-            <p style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
+            <p id="conv-fecha-apertura" style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
             <p class="small" style="color:var(--muted)">Inicio de recepción de solicitudes en línea.</p>
           </div>
           <div class="info-card" style="text-align:center;">
             <div style="font-size:2rem;margin-bottom:8px;">⏱️</div>
             <h3>Cierre de Recepción</h3>
-            <p style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
+            <p id="conv-fecha-cierre-rec" style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
             <p class="small" style="color:var(--muted)">Último día para crear cuenta y subir documentos.</p>
           </div>
           <div class="info-card" style="text-align:center;">
             <div style="font-size:2rem;margin-bottom:8px;">✅</div>
             <h3>Cierre de Correcciones</h3>
-            <p style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
+            <p id="conv-fecha-cierre-cor" style="font-size:1.25rem;color:var(--navy);font-weight:bold;">Por confirmar</p>
             <p class="small" style="color:var(--muted)">Límite para solventar observaciones en documentos rechazados.</p>
+          </div>
+          <div class="info-card" style="text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">💳</div>
+            <h3>Costo del Trámite</h3>
+            <p id="conv-costo-display" style="font-size:1.25rem;color:var(--success);font-weight:bold;">Por confirmar</p>
+            <p class="small" style="color:var(--muted)">Cuota oficial aprobada para el ciclo vigente.</p>
           </div>
         </div>
       </section>
@@ -132,6 +138,33 @@
     </div>
   </main>
   <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div></div></footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      function formatFecha(str) {
+        if (!str) return 'Por confirmar';
+        try {
+          const [y, m, d] = str.split('-').map(Number);
+          return new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+        } catch (_) { return str; }
+      }
+      try {
+        const res = await fetch('/api/convocatoria');
+        if (res.ok) {
+          const d = await res.json();
+          const ap = document.getElementById('conv-fecha-apertura');
+          const rec = document.getElementById('conv-fecha-cierre-rec');
+          const cor = document.getElementById('conv-fecha-cierre-cor');
+          const costo = document.getElementById('conv-costo-display');
+          if (ap) ap.textContent = formatFecha(d.fechaApertura);
+          if (rec) rec.textContent = formatFecha(d.fechaCierreRecepcion);
+          if (cor) cor.textContent = formatFecha(d.fechaCierreCorrecciones);
+          if (costo) costo.textContent = d.costo || 'Gratuito';
+        }
+      } catch (e) {
+        console.error('Error al cargar convocatoria:', e);
+      }
+    });
+  </script>
 </body>
 </html>
 

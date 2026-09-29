@@ -132,6 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('conv-apertura').value = formatDateForInput(data.fechaApertura);
       document.getElementById('conv-cierre-rec').value = formatDateForInput(data.fechaCierreRecepcion);
       document.getElementById('conv-cierre-cor').value = formatDateForInput(data.fechaCierreCorrecciones);
+      const costoInput = document.getElementById('conv-costo');
+      if (costoInput) costoInput.value = data.costo || 'Gratuito';
     } catch (err) {
       console.error(err);
     }
@@ -139,11 +141,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('form-convocatoria').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const costoInput = document.getElementById('conv-costo');
     const body = {
       activa: document.getElementById('conv-activa').checked,
       fechaApertura: document.getElementById('conv-apertura').value,
       fechaCierreRecepcion: document.getElementById('conv-cierre-rec').value,
-      fechaCierreCorrecciones: document.getElementById('conv-cierre-cor').value
+      fechaCierreCorrecciones: document.getElementById('conv-cierre-cor').value,
+      costo: costoInput ? costoInput.value.trim() : 'Gratuito'
     };
     try {
       const res = await fetch('/api/admin/convocatoria', {

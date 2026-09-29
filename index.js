@@ -665,7 +665,7 @@ app.put("/api/admin/convocatoria", requireRole("admin"), (req, res) => {
   }
 
   const conv = readObj("convocatoria.json");
-  const campos = ["activa", "fechaApertura", "fechaCierreRecepcion", "fechaCierreCorrecciones"];
+  const campos = ["activa", "fechaApertura", "fechaCierreRecepcion", "fechaCierreCorrecciones", "costo"];
   for (const c of campos) {
     if (req.body[c] !== undefined) conv[c] = req.body[c];
   }

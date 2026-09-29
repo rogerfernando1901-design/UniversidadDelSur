@@ -38,18 +38,22 @@
           <p class="small">Nuevo ingreso · Un proceso claro, paso a paso.</p>
         </div>
         <aside class="call-card" aria-labelledby="convocatoria-title">
-          <div class="card-top"><span class="eyebrow">NUEVO INGRESO</span><span class="badge">Por confirmar</span></div>
+          <div class="card-top"><span class="eyebrow">NUEVO INGRESO</span><span class="badge" id="conv-status-badge">Cargando...</span></div>
           <h2 id="convocatoria-title">Próxima convocatoria</h2>
-          <p>Consulta la información antes de comenzar tu trámite.</p>
-          <dl class="dates"><div><dt>Apertura de inscripciones</dt><dd>Por confirmar</dd></div><div><dt>Cierre de inscripciones</dt><dd>Por confirmar</dd></div><div><dt>Costo del trámite</dt><dd>Por confirmar</dd></div></dl>
+          <p id="conv-subtitle">Consulta la información antes de comenzar tu trámite.</p>
+          <dl class="dates">
+            <div><dt>Apertura de inscripciones</dt><dd id="conv-apertura-val">Por confirmar</dd></div>
+            <div><dt>Cierre de inscripciones</dt><dd id="conv-cierre-val">Por confirmar</dd></div>
+            <div><dt>Costo del trámite</dt><dd id="conv-costo-val">Por confirmar</dd></div>
+          </dl>
           <button class="secondary full" data-panel="convocatoria">Ver información de la convocatoria</button>
-          <p class="small">Las fechas y los costos se publicarán al aprobar la convocatoria.</p>
+          <p class="small" id="conv-note">Consulta las fechas oficiales aprobadas por la institución.</p>
         </aside>
       </div>
     </section>
     <section class="container offer" aria-labelledby="offer-title">
-      <div class="section-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h2 id="offer-title">Una carrera para tu futuro</h2></div><p>Explora nuestra oferta de ejemplo.</p></div>
-      <div class="career-grid">
+      <div class="section-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h2 id="offer-title">Una carrera para tu futuro</h2></div><p>Explora nuestra oferta académica vigente.</p></div>
+      <div class="career-grid" id="career-grid-container">
         <article class="career-card"><span class="career-number" aria-hidden="true">01 / TECNOLOGÍA</span><h3>Ingeniería en Sistemas</h3><p>Crea soluciones digitales que conecten ideas y personas.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="sistemas">Conocer Ingeniería en Sistemas <span aria-hidden="true">↗</span></button></article>
         <article class="career-card"><span class="career-number" aria-hidden="true">02 / NEGOCIOS</span><h3>Administración</h3><p>Transforma proyectos en organizaciones con propósito.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="administracion">Conocer Administración <span aria-hidden="true">↗</span></button></article>
         <article class="career-card"><span class="career-number" aria-hidden="true">03 / DISEÑO</span><h3>Diseño Gráfico</h3><p>Comunica ideas a través de experiencias visuales.</p><p class="metadata">Campus Central · Presencial</p><button class="text-button" data-career="diseno">Conocer Diseño Gráfico <span aria-hidden="true">↗</span></button></article>

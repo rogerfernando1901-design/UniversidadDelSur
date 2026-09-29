@@ -30,7 +30,7 @@
     <div class="container info-page">
       <section class="info-section">
         <h2>Nuestras Carreras</h2>
-        <div class="info-grid">
+        <div class="info-grid" id="oferta-grid-container">
           <div class="info-card">
             <span class="tag">Tecnología</span>
             <h3><a href="/Paginas/sistemas.html" style="color:var(--navy);text-decoration:none;">Ingeniería en Sistemas Computacionales</a></h3>
@@ -90,6 +90,63 @@
     </div>
   </main>
   <footer class="footer"><div class="container footer-inner"><div><strong>Universidad Horizonte del Sureste</strong><p>Portal de inscripciones · Proyecto académico 2026</p></div></div></footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const knownLinks = {
+        sistemas: '/Paginas/sistemas.html',
+        administracion: '/Paginas/administracion.html',
+        diseno: '/Paginas/diseno.html'
+      };
+      try {
+        const res = await fetch('/api/carreras');
+        if (!res.ok) return;
+        const carreras = await res.json();
+        if (!Array.isArray(carreras) || carreras.length === 0) return;
+
+        const container = document.getElementById('oferta-grid-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        carreras.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'info-card';
+
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.textContent = c.modalidad || 'Presencial';
+          card.appendChild(tag);
+
+          const h3 = document.createElement('h3');
+          const link = document.createElement('a');
+          link.href = knownLinks[c.id] || '/Paginas/inscripcion.html';
+          link.style.cssText = 'color:var(--navy);text-decoration:none;';
+          link.textContent = c.nombre;
+          h3.appendChild(link);
+          card.appendChild(h3);
+
+          const pInfo = document.createElement('p');
+          const cupoDisp = c.disponible !== undefined ? c.disponible : (c.cupo - (c.inscritos || 0));
+          pInfo.textContent = `Programa académico de nivel superior. Lugares disponibles: ${cupoDisp} de ${c.cupo}.`;
+          card.appendChild(pInfo);
+
+          const pMeta = document.createElement('p');
+          pMeta.innerHTML = `<strong>Modalidad:</strong> ${c.modalidad || 'Presencial'}<br><strong>Campus:</strong> ${c.campus || 'Campus Central'}<br><strong>Cupo total:</strong> ${c.cupo}`;
+          card.appendChild(pMeta);
+
+          const cta = document.createElement('a');
+          cta.className = 'text-button';
+          cta.style.cssText = 'margin-top:16px;display:inline-block;font-weight:600;';
+          cta.href = knownLinks[c.id] || '/Paginas/inscripcion.html';
+          cta.textContent = knownLinks[c.id] ? 'Ver plan de estudios →' : 'Inscribirme ahora →';
+          card.appendChild(cta);
+
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error al cargar carreras en oferta:', err);
+      }
+    });
+  </script>
 </body>
 </html>
 
