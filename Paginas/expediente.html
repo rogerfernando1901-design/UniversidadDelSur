@@ -65,8 +65,12 @@
                         <input type="tel" id="telefono" name="telefono" required>
                     </div>
                     <div class="field">
-                        <label for="curp">CURP (Opcional)</label>
-                        <input type="text" id="curp" name="curp" pattern="^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9]{2}$" title="CURP a 18 caracteres">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label for="curp" style="margin-bottom:0;">CURP (Opcional)</label>
+                            <button type="button" id="btn-calcular-curp" style="background:none; border:none; color:var(--blue); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;">⚡ Generar con mis datos</button>
+                        </div>
+                        <input type="text" id="curp" name="curp" maxlength="18" placeholder="Ej. MACA040819MYCNRN03" style="text-transform:uppercase;" autocomplete="off">
+                        <small id="curp-hint" style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">18 caracteres alfanuméricos oficiales (RENAPO)</small>
                     </div>
                 </div>
                 <div class="field" style="grid-column: 1 / -1;">

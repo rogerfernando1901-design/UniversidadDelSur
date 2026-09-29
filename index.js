@@ -286,13 +286,17 @@ app.put("/api/expediente", requireRole("aspirante"), (req, res) => {
     const camposPermitidos = exp.observaciones.filter(o => !o.resuelto).map(o => o.campo);
     for (const key of Object.keys(req.body.datos || {})) {
       if (campos.includes(key) && camposPermitidos.includes(key)) {
-        exp.datos[key] = req.body.datos[key];
+        let val = req.body.datos[key];
+        if (typeof val === "string" && key === "curp") val = val.trim().toUpperCase();
+        exp.datos[key] = val;
       }
     }
   } else {
     for (const key of campos) {
       if (req.body.datos && req.body.datos[key] !== undefined) {
-        exp.datos[key] = req.body.datos[key];
+        let val = req.body.datos[key];
+        if (typeof val === "string" && key === "curp") val = val.trim().toUpperCase();
+        exp.datos[key] = val;
       }
     }
   }

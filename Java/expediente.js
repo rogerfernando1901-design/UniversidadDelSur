@@ -78,6 +78,112 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('loading-indicator').innerHTML = '<span style="color:var(--error);">Error al cargar expediente.</span>';
     }
 
+    // ── Lógica y Asistente de CURP ────────────────────────────
+    const curpInput = document.getElementById('curp');
+    const curpHint = document.getElementById('curp-hint');
+    const btnCalcularCurp = document.getElementById('btn-calcular-curp');
+
+    const validarCurpFormato = (valor) => {
+        const regex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/;
+        return regex.test(valor);
+    };
+
+    if (curpInput) {
+        curpInput.addEventListener('input', (e) => {
+            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 18);
+            e.target.value = raw;
+            if (curpHint) {
+                if (raw.length === 0) {
+                    curpHint.textContent = '18 caracteres alfanuméricos oficiales (RENAPO)';
+                    curpHint.style.color = 'var(--muted)';
+                } else if (raw.length === 18) {
+                    if (validarCurpFormato(raw)) {
+                        curpHint.innerHTML = '<span style="color:#16a34a; font-weight:700;">✓ Formato de CURP válido (18 caracteres)</span>';
+                    } else {
+                        curpHint.innerHTML = '<span style="color:#dc2626; font-weight:600;">⚠️ Revisa la estructura (18 caracteres oficiales)</span>';
+                    }
+                } else {
+                    curpHint.textContent = `${raw.length}/18 caracteres`;
+                    curpHint.style.color = 'var(--muted)';
+                }
+            }
+        });
+    }
+
+    if (btnCalcularCurp) {
+        btnCalcularCurp.addEventListener('click', () => {
+            const nombre = (document.getElementById('nombre')?.value || '').trim();
+            const apPaterno = (document.getElementById('apellidoPaterno')?.value || '').trim();
+            const apMaterno = (document.getElementById('apellidoMaterno')?.value || '').trim();
+            const fechaNac = (document.getElementById('fechaNacimiento')?.value || '').trim();
+
+            if (!nombre || !apPaterno || !fechaNac) {
+                showError('Ingresa primero Nombre, Apellido Paterno y Fecha de Nacimiento para generar tu CURP.');
+                return;
+            }
+
+            const cleanStr = (s) => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z]/g, '');
+
+            const n = cleanStr(nombre);
+            const p = cleanStr(apPaterno);
+            const m = cleanStr(apMaterno) || 'X';
+
+            // 1. Primera letra y primera vocal interna de paterno
+            const c1 = p.charAt(0) || 'X';
+            const vocales = p.slice(1).match(/[AEIOU]/);
+            const c2 = vocales ? vocales[0] : 'X';
+
+            // 2. Primera letra de materno
+            const c3 = m.charAt(0) || 'X';
+
+            // 3. Primera letra del nombre (ignorar José o María si hay segundo nombre)
+            let primerNombre = n.split(/\s+/)[0] || 'X';
+            if ((primerNombre === 'JOSE' || primerNombre === 'MARIA') && n.split(/\s+/).length > 1) {
+                primerNombre = n.split(/\s+/)[1];
+            }
+            const c4 = primerNombre.charAt(0) || 'X';
+
+            // 4. Fecha AAMMDD (desde YYYY-MM-DD)
+            const partesFecha = fechaNac.split('-');
+            let fStr = '000000';
+            let anioNum = 2000;
+            if (partesFecha.length === 3) {
+                anioNum = parseInt(partesFecha[0], 10);
+                const aa = partesFecha[0].slice(2, 4);
+                const mm = partesFecha[1].padStart(2, '0');
+                const dd = partesFecha[2].padStart(2, '0');
+                fStr = `${aa}${mm}${dd}`;
+            }
+
+            // 5. Sexo
+            const nombresFemeninos = ['MARIA', 'AURORA', 'VANESSA', 'ANA', 'CARLA', 'DANIELA', 'SOFIA', 'VALERIA', 'CAMILA', 'FERNANDA', 'PAOLA', 'ANDREA', 'ELENA', 'LAURA', 'LUCIA', 'DIANA', 'GABRIELA'];
+            let sexo = 'H';
+            if (nombresFemeninos.some(fem => n.includes(fem)) || n.endsWith('A')) {
+                sexo = 'M';
+            }
+
+            // 6. Entidad federativa (YN por defecto para Sureste)
+            const entidad = 'YN';
+
+            // 7. Primeras consonantes internas no iniciales
+            const getConsonanteInterna = (str) => {
+                const match = str.slice(1).match(/[BCDFGHJKLMNPQRSTVWXYZ]/);
+                return match ? match[0] : 'X';
+            };
+            const cP = getConsonanteInterna(p);
+            const cM = getConsonanteInterna(m);
+            const cN = getConsonanteInterna(primerNombre);
+
+            // 8. Carácter de siglo (A para nacidos a partir de 2000, 0 para siglo XX)
+            const sigloChar = anioNum >= 2000 ? 'A' : '0';
+            const digitoVerif = '1';
+
+            const curpGenerada = `${c1}${c2}${c3}${c4}${fStr}${sexo}${entidad}${cP}${cM}${cN}${sigloChar}${digitoVerif}`;
+            curpInput.value = curpGenerada;
+            curpInput.dispatchEvent(new Event('input'));
+        });
+    }
+
     // Handlers
     document.getElementById('btn-save-draft').addEventListener('click', async () => {
         await saveExpediente(false);
@@ -96,6 +202,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const uploadedDocs = document.querySelectorAll('.doc-card.uploaded, .doc-card.aprobado, .doc-card.en_revision');
         if (uploadedDocs.length < 3 && currentExpediente.estado !== 'con_observaciones') {
             showError('Debes subir los 3 documentos requeridos antes de enviar la solicitud.');
+            return;
+        }
+
+        // Validar CURP si fue ingresada
+        const curpVal = (document.getElementById('curp')?.value || '').trim();
+        if (curpVal.length > 0 && curpVal.length < 18) {
+            showError('La CURP debe tener 18 caracteres oficiales o dejarse vacía.');
+            document.getElementById('curp')?.focus();
             return;
         }
 
@@ -121,8 +235,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dataToSave = { datos: {} };
         
         ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','domicilio','bachillerato','curp','carrera'].forEach(key => {
-            if (formData.get(key)) {
-                dataToSave.datos[key] = formData.get(key);
+            const raw = formData.get(key);
+            if (raw !== null && raw !== undefined) {
+                let val = String(raw).trim();
+                if (key === 'curp') val = val.toUpperCase();
+                if (val !== '') {
+                    dataToSave.datos[key] = val;
+                }
             }
         });
 
