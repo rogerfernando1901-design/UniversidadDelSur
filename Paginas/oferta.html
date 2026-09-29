@@ -116,9 +116,11 @@
           tag.textContent = c.modalidad || 'Presencial';
           card.appendChild(tag);
 
+          const planUrl = knownLinks[c.id] || `/Paginas/carrera.html?id=${encodeURIComponent(c.id)}`;
+
           const h3 = document.createElement('h3');
           const link = document.createElement('a');
-          link.href = knownLinks[c.id] || '/Paginas/inscripcion.html';
+          link.href = planUrl;
           link.style.cssText = 'color:var(--navy);text-decoration:none;';
           link.textContent = c.nombre;
           h3.appendChild(link);
@@ -136,8 +138,8 @@
           const cta = document.createElement('a');
           cta.className = 'text-button';
           cta.style.cssText = 'margin-top:16px;display:inline-block;font-weight:600;';
-          cta.href = knownLinks[c.id] || '/Paginas/inscripcion.html';
-          cta.textContent = knownLinks[c.id] ? 'Ver plan de estudios →' : 'Inscribirme ahora →';
+          cta.href = planUrl;
+          cta.textContent = 'Ver plan de estudios →';
           card.appendChild(cta);
 
           container.appendChild(card);

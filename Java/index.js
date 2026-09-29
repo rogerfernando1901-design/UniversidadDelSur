@@ -136,9 +136,9 @@ async function cargarCarrerasHome() {
       // Botón de acción
       const btn = document.createElement("button");
       btn.className = "text-button";
-      btn.innerHTML = `Conocer más <span aria-hidden="true">↗</span>`;
+      btn.innerHTML = `Ver plan de estudios <span aria-hidden="true">↗</span>`;
       
-      const targetUrl = careerRoutes[c.id] || "/Paginas/oferta.html";
+      const targetUrl = careerRoutes[c.id] || `/Paginas/carrera.html?id=${encodeURIComponent(c.id)}`;
       btn.onclick = () => window.location.assign(targetUrl);
       article.appendChild(btn);
 
