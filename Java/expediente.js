@@ -3,6 +3,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentExpediente;
     const form = document.getElementById('expediente-form');
     const errorAlert = document.getElementById('general-error');
+    document.getElementById('logout-btn').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            const res = await fetch('/api/logout', { method: 'POST' });
+            if (!res.ok) throw new Error('Error al cerrar sesión');
+            window.location.href = '/Paginas/acceso.html';
+        } catch (e) {
+            window.alert('No se pudo cerrar la sesión. Intenta de nuevo.');
+            button.disabled = false;
+        }
+    });
 
     try {
         const res = await fetch('/api/sesion');

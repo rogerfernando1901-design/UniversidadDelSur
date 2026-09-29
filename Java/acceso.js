@@ -1,17 +1,45 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('login-form');
+    const activeSession = document.getElementById('active-session');
+    const switchAccount = document.getElementById('switch-account');
+    switchAccount.addEventListener('click', async () => {
+        const error = document.getElementById('session-error');
+        error.hidden = true;
+        switchAccount.disabled = true;
+        try {
+            const res = await fetch('/api/logout', { method: 'POST' });
+            if (!res.ok) throw new Error('No se pudo cerrar la sesión. Intenta de nuevo.');
+            activeSession.hidden = true;
+            form.hidden = false;
+            form.reset();
+            document.getElementById('email').focus();
+        } catch (e) {
+            error.textContent = 'No se pudo cerrar la sesión. Intenta de nuevo.';
+            error.hidden = false;
+        } finally {
+            switchAccount.disabled = false;
+        }
+    });
     try {
         const res = await fetch('/api/sesion');
         if (res.ok) {
             const session = await res.json();
             if (session.autenticado) {
-                window.location.href = session.role === 'aspirante' ? '/Paginas/panel.html' : '/';
+                document.getElementById('session-email').textContent = session.email;
+                const panels = {
+                    aspirante: '/Paginas/panel.html',
+                    control_escolar: '/Paginas/control.html',
+                    admin: '/Paginas/admin_panel.html'
+                };
+                document.getElementById('session-panel').href = panels[session.role] || '/';
+                activeSession.hidden = false;
+                form.hidden = true;
             }
         }
     } catch (e) {
         console.error('Error al comprobar sesión:', e);
     }
 
-    const form = document.getElementById('login-form');
     const errorSummary = document.getElementById('error-summary');
 
     form.addEventListener('submit', async (e) => {

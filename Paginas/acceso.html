@@ -27,6 +27,12 @@
         <h1 style="font-size: 26px; color: var(--navy);">Iniciar Sesión</h1>
         <p style="color: var(--muted); margin-top: 8px;">Accede a tu cuenta para continuar con tu proceso</p>
       </div>
+      <section id="active-session" hidden aria-live="polite" style="margin-bottom: 24px;">
+        <p>Sesión iniciada como <strong id="session-email"></strong>.</p>
+        <p><a id="session-panel" href="/Paginas/panel.html">Ir a mi panel</a></p>
+        <button id="switch-account" type="button" class="primary">Cerrar sesión y usar otra cuenta</button>
+        <p id="session-error" role="alert" hidden></p>
+      </section>
       <form id="login-form">
         <div id="error-summary" class="error-summary" style="display:none;" aria-live="polite"></div>
         <div class="field">
