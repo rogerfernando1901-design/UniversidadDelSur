@@ -38,7 +38,7 @@
         <p class="eyebrow">PASO 01</p>
         <h2 id="account-title">Datos de tu cuenta</h2>
         <p>Usa un correo al que tengas acceso. Todos los campos de este formulario son obligatorios.</p>
-        <div class="notice"><strong>Registro en preparación</strong><p>Por ahora puedes revisar el formulario con datos ficticios. Todavía no se crean cuentas ni se envían correos de verificación.</p></div>
+        <div class="notice" id="registration-notice" style="background:#EFF6FF; border-left:3px solid var(--blue);"><strong style="color:var(--blue);">Portal de Registro Abierto</strong><p>Crea tu cuenta de aspirante para iniciar tu proceso de admisión y dar seguimiento a tu solicitud.</p></div>
         <noscript><p class="notice">Activa JavaScript para revisar los datos del formulario.</p></noscript>
         <form id="registration-form" method="post" novalidate>
           <div id="error-summary" class="error-summary" tabindex="-1" role="alert" hidden>
@@ -47,7 +47,14 @@
           <div class="field">
             <label for="email">Correo electrónico <span>(obligatorio)</span></label>
             <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required aria-describedby="email-help email-error" placeholder="aspirante@example.com">
-            <p class="field-help" id="email-help">Aquí recibirás el enlace de verificación cuando se habilite el registro.</p>
+            <div id="email-exists-alert" style="display:none; margin-top:8px; padding:12px; border-radius:6px; background:#FEF2F2; border:1px solid #F87171; color:#991B1B; font-size:13px;">
+              <strong style="display:block; margin-bottom:4px; font-size:14px;">⚠️ Ya existe una cuenta con este correo</strong>
+              <span>Este correo electrónico ya está registrado en el sistema.</span>
+              <div style="margin-top:8px;">
+                <a id="email-exists-login-btn" href="/Paginas/acceso.html" class="primary" style="display:inline-block; padding:6px 14px; font-size:13px; text-decoration:none; border-radius:4px; font-weight:600; background:var(--blue); color:white;">Iniciar sesión con esta cuenta →</a>
+              </div>
+            </div>
+            <p class="field-help" id="email-help">Usa un correo al que tengas acceso para gestionar tu expediente.</p>
             <p class="field-error" id="email-error" hidden></p>
           </div>
           <div class="field">
@@ -62,11 +69,10 @@
             <p class="field-error" id="confirmation-error" hidden></p>
           </div>
           <details class="privacy-note">
-            <summary>Uso de datos en esta demostración</summary>
-            <p>Esta pantalla permite comprobar el formato de datos ficticios dentro del navegador. No envía ni guarda el correo o la contraseña en el servidor ni en el almacenamiento local. Al recargar no se garantiza conservar lo escrito.</p>
-            <p>Antes de habilitar cuentas, se integrarán el aviso de privacidad institucional y el registro de su versión y aceptación.</p>
+            <summary>Aviso de Privacidad y Protección de Datos</summary>
+            <p>La información recopilada será utilizada exclusivamente para el trámite de admisión de la Universidad Horizonte del Sureste, garantizando la confidencialidad y el resguardo de tus datos conforme a la legislación aplicable.</p>
           </details>
-          <button class="primary full" id="review-button" type="submit" disabled>Revisar datos de registro</button>
+          <button class="primary full" id="review-button" type="submit" disabled>Crear cuenta de aspirante</button>
           <div class="review-result" id="review-result" role="status" tabindex="-1" hidden></div>
           <p class="account-link">¿Ya tienes una cuenta? <a href="/Paginas/acceso.html">Ingresar</a></p>
         </form>

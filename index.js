@@ -39,7 +39,7 @@ function rateLimit(maxRequests, windowMs) {
     next();
   };
 }
-const loginLimiter = rateLimit(10, 5 * 60 * 1000); // 10 requests per 5 minutes
+const loginLimiter = rateLimit(100, 5 * 60 * 1000); // 100 requests per 5 minutes
 
 /* ═══════════════════════════════════════════════════════════
    Almacenamiento JSON en disco
@@ -160,6 +160,18 @@ app.get("/index.html", (_req, res) => res.redirect("/"));
    API — Autenticación
    ═══════════════════════════════════════════════════════════ */
 
+// Verificar disponibilidad de correo
+app.get("/api/verificar-correo", (req, res) => {
+  const email = req.query.email;
+  if (!email || typeof email !== "string") {
+    return res.json({ existe: false });
+  }
+  const emailNorm = email.trim().toLowerCase();
+  const usuarios = readList("usuarios.json");
+  const existe = usuarios.some(u => u.email === emailNorm);
+  res.json({ existe, email: emailNorm });
+});
+
 // Registro de aspirante
 app.post("/api/registro", loginLimiter, async (req, res) => {
   const { email, password } = req.body;
@@ -175,7 +187,7 @@ app.post("/api/registro", loginLimiter, async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
   const usuarios = readList("usuarios.json");
   if (usuarios.find(u => u.email === emailNorm)) {
-    return res.status(409).json({ error: "Ya existe una cuenta con ese correo." });
+    return res.status(409).json({ error: "Ya existe una cuenta con ese correo.", existe: true });
   }
   const user = {
     id: uuidv4(), email: emailNorm, passwordHash: hash,

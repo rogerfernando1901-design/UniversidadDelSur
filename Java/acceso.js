@@ -42,6 +42,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const errorSummary = document.getElementById('error-summary');
 
+    // Prellenar correo si viene desde el enlace de registro
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailParam = urlParams.get('email');
+        if (emailParam) {
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                emailInput.value = emailParam;
+                const pwdInput = document.getElementById('password');
+                if (pwdInput) pwdInput.focus();
+            }
+        }
+    } catch (_) {}
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorSummary.style.display = 'none';
