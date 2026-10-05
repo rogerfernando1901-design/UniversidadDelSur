@@ -29,12 +29,12 @@
       <p>Tu primer paso es crear una cuenta. Después podrás completar tu expediente y consultar el avance de tu solicitud.</p>
     </div>
     <ol class="registration-steps" aria-label="Etapas del registro">
-      <li aria-current="step"><span aria-hidden="true">01</span><div><strong>Crear cuenta</strong><small>Paso actual</small></div></li>
-      <li><span aria-hidden="true">02</span><div><strong>Verificar correo</strong><small>Siguiente paso</small></div></li>
-      <li><span aria-hidden="true">03</span><div><strong>Completar expediente</strong><small>Después de verificar</small></div></li>
+      <li id="step-item-1" aria-current="step"><span aria-hidden="true">01</span><div><strong>Crear cuenta</strong><small id="step-label-1">Paso actual</small></div></li>
+      <li id="step-item-2"><span aria-hidden="true">02</span><div><strong>Verificar correo</strong><small id="step-label-2">Siguiente paso</small></div></li>
+      <li id="step-item-3"><span aria-hidden="true">03</span><div><strong>Completar expediente</strong><small id="step-label-3">Después de verificar</small></div></li>
     </ol>
     <div class="registration-grid">
-      <section class="registration-card" aria-labelledby="account-title">
+      <section class="registration-card" id="account-card" aria-labelledby="account-title">
         <p class="eyebrow">PASO 01</p>
         <h2 id="account-title">Datos de tu cuenta</h2>
         <p>Usa un correo al que tengas acceso. Todos los campos de este formulario son obligatorios.</p>
@@ -59,22 +59,59 @@
           </div>
           <div class="field">
             <label for="password">Contraseña <span>(obligatorio)</span></label>
-            <div class="password-control"><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="password-help password-error"><button class="secondary reveal" type="button" data-toggle="password" aria-controls="password" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button></div>
-            <p class="field-help" id="password-help">Entre 12 y 128 caracteres. Puedes usar una frase larga, pegar una contraseña o usar tu gestor.</p>
+            <div class="password-control"><input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required aria-describedby="password-help password-error"><button class="secondary reveal" type="button" data-toggle="password" aria-controls="password" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button></div>
+            <p class="field-help" id="password-help">Mínimo 8 caracteres, al menos una letra mayúscula y un carácter especial.</p>
             <p class="field-error" id="password-error" hidden></p>
           </div>
           <div class="field">
             <label for="confirmation">Confirma tu contraseña <span>(obligatorio)</span></label>
-            <div class="password-control"><input id="confirmation" name="confirmation" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="confirmation-error"><button class="secondary reveal" type="button" data-toggle="confirmation" aria-controls="confirmation" aria-label="Mostrar confirmación de contraseña" aria-pressed="false">Mostrar</button></div>
+            <div class="password-control"><input id="confirmation" name="confirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required aria-describedby="confirmation-error"><button class="secondary reveal" type="button" data-toggle="confirmation" aria-controls="confirmation" aria-label="Mostrar confirmación de contraseña" aria-pressed="false">Mostrar</button></div>
             <p class="field-error" id="confirmation-error" hidden></p>
           </div>
-          <details class="privacy-note">
-            <summary>Aviso de Privacidad y Protección de Datos</summary>
-            <p>La información recopilada será utilizada exclusivamente para el trámite de admisión de la Universidad Horizonte del Sureste, garantizando la confidencialidad y el resguardo de tus datos conforme a la legislación aplicable.</p>
-          </details>
+          <div class="privacy-agreement-group" style="margin-bottom:24px; padding:14px 16px; border:1px solid var(--border); border-radius:8px; background:#F8FAFC;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <input type="checkbox" id="privacy-terms" name="privacyTerms" required style="width:18px; height:18px; margin-top:2px; cursor:pointer; accent-color:var(--blue); flex-shrink:0;" aria-describedby="privacy-error">
+              <label for="privacy-terms" style="font-size:14px; color:var(--text); cursor:pointer; line-height:1.45; margin:0; font-weight:500;">
+                Acepto los <span style="font-weight:700;">términos de privacidad</span> y el tratamiento de mis datos personales para el proceso de admisión. <span style="color:var(--error); font-weight:700;" aria-hidden="true">*</span>
+              </label>
+            </div>
+            <p class="field-error" id="privacy-error" hidden style="margin-top:8px; margin-left:30px;"></p>
+            <details class="privacy-note" style="margin:10px 0 0 30px; font-size:13px;">
+              <summary style="cursor:pointer; color:var(--blue); text-decoration:underline; font-weight:500;">Leer el Aviso de Privacidad y Protección de Datos completo</summary>
+              <p style="margin:8px 0 0; color:var(--muted); line-height:1.5;">La información recopilada será utilizada exclusivamente para el trámite de admisión de la Universidad Horizonte del Sureste, garantizando la confidencialidad y el resguardo de tus datos conforme a la legislación aplicable.</p>
+            </details>
+          </div>
           <button class="primary full" id="review-button" type="submit" disabled>Crear cuenta de aspirante</button>
           <div class="review-result" id="review-result" role="status" tabindex="-1" hidden></div>
           <p class="account-link">¿Ya tienes una cuenta? <a href="/Paginas/acceso.html">Ingresar</a></p>
+        </form>
+      </section>
+
+      <!-- Tarjeta Paso 02: Verificación de Identidad por Token -->
+      <section class="registration-card" id="verification-card" aria-labelledby="verify-title" style="display:none;">
+        <p class="eyebrow" style="color:var(--blue);">PASO 02 · VERIFICACIÓN</p>
+        <h2 id="verify-title" style="color:var(--navy);">Verifica tu correo electrónico</h2>
+        <p>Hemos enviado un código de verificación a: <strong id="verify-email-display" style="color:var(--navy); word-break:break-all;"></strong></p>
+
+        <div id="token-alert-box" style="margin:16px 0; padding:12px; border-radius:6px; background:#EFF6FF; border:1px solid #BFDBFE; color:#1E40AF; font-size:13px;">
+          <span>Revisa tu bandeja de entrada o carpeta de spam en Gmail. Ingresa el código de 6 dígitos antes de que expire (15 minutos).</span>
+        </div>
+
+        <form id="verification-form" method="post" novalidate style="margin-top:20px;">
+          <div id="verify-error" class="error-summary" style="display:none; margin-bottom:16px;" role="alert"></div>
+
+          <div class="field">
+            <label for="token-input">Código de verificación (6 dígitos) *</label>
+            <input id="token-input" name="token" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autocomplete="one-time-code" placeholder="------" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700; height:54px;">
+            <p class="field-help">Introduce los 6 números enviados a tu Gmail.</p>
+          </div>
+
+          <button class="primary full" id="btn-verify-token" type="submit" style="margin-top:16px; padding:14px; font-size:16px;">Verificar y continuar con mi expediente (Paso 3) →</button>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; gap:8px; flex-wrap:wrap;">
+            <button type="button" id="btn-resend-token" style="background:none; border:none; color:var(--blue); font-weight:600; cursor:pointer; padding:0; text-decoration:underline;">Reenviar código a mi correo</button>
+            <button type="button" id="btn-change-email" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:0; text-decoration:underline;">Cambiar correo</button>
+          </div>
         </form>
       </section>
       <aside class="registration-aside" aria-labelledby="next-title">

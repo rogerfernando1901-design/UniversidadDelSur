@@ -4,8 +4,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch('/api/sesion');
         if (!res.ok) throw new Error('No autorizado');
         session = await res.json();
-        if (!session.autenticado || session.role !== 'aspirante') {
+        if (!session.autenticado) {
             window.location.href = '/Paginas/acceso.html';
+            return;
+        }
+        if (session.role !== 'aspirante') {
+            const panels = {
+                admin: '/Paginas/admin_panel.html',
+                control_escolar: '/Paginas/control.html'
+            };
+            window.location.replace(panels[session.role] || '/Paginas/panel.html');
             return;
         }
     } catch (e) {
@@ -16,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nav-user-name').textContent = session.nombre;
     document.getElementById('logout-btn').addEventListener('click', async () => {
         await fetch('/api/logout', { method: 'POST' });
-        window.location.href = '/';
+        window.location.href = '/Paginas/acceso.html';
     });
 
     try {
@@ -46,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Calculate progress
         let filledFields = 0;
-        const requiredFields = ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','domicilio','bachillerato','curp','carrera'];
+        const requiredFields = ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','curp','carrera'];
         requiredFields.forEach(f => {
             if (expediente.datos[f]) filledFields++;
         });
@@ -56,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             docsCount = expediente.documentos.length;
         }
         
-        const totalItems = requiredFields.length + 3; // 3 docs required
+        const totalItems = requiredFields.length + 4; // 4 docs required (incluyendo comprobante de domicilio)
         const totalCompleted = filledFields + docsCount;
         const progress = Math.round((totalCompleted / totalItems) * 100);
         
@@ -65,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('expediente-summary').innerHTML = `
             <strong>${filledFields} de ${requiredFields.length}</strong> datos personales completos.<br>
-            <strong>${docsCount} de 3</strong> documentos subidos.
+            <strong>${docsCount} de 4</strong> documentos subidos.
         `;
 
         // Docs summary

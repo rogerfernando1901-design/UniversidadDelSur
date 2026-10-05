@@ -25,15 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (res.ok) {
             const session = await res.json();
             if (session.autenticado) {
-                document.getElementById('session-email').textContent = session.email;
                 const panels = {
                     aspirante: '/Paginas/panel.html',
                     control_escolar: '/Paginas/control.html',
                     admin: '/Paginas/admin_panel.html'
                 };
-                document.getElementById('session-panel').href = panels[session.role] || '/';
-                activeSession.hidden = false;
-                form.hidden = true;
+                window.location.replace(panels[session.role] || '/Paginas/panel.html');
+                return;
             }
         }
     } catch (e) {
@@ -60,10 +58,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         errorSummary.style.display = 'none';
         
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
         const submitBtn = form.querySelector('button[type="submit"]');
-        
+
+        // Validación de formato de correo RFC
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+        if (!email || !emailRegex.test(email) || email.length > 254) {
+            errorSummary.textContent = 'Escribe un correo electrónico válido (ejemplo: usuario@dominio.com).';
+            errorSummary.style.display = 'block';
+            emailInput.focus();
+            return;
+        }
+
+        // Validación de complejidad de contraseña (RF-01 / RF-02)
+        if (password.length < 8 || password.length > 128) {
+            errorSummary.textContent = 'La contraseña debe tener entre 8 y 128 caracteres.';
+            errorSummary.style.display = 'block';
+            passwordInput.focus();
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            errorSummary.textContent = 'La contraseña debe incluir al menos una letra mayúscula.';
+            errorSummary.style.display = 'block';
+            passwordInput.focus();
+            return;
+        }
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~^`]/.test(password)) {
+            errorSummary.textContent = 'La contraseña debe incluir al menos un carácter especial.';
+            errorSummary.style.display = 'block';
+            passwordInput.focus();
+            return;
+        }
+
         submitBtn.disabled = true;
         submitBtn.textContent = 'Iniciando sesión...';
         
@@ -78,7 +107,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.ok) {
                 window.location.href = data.redirect || '/Paginas/panel.html';
             } else {
-                errorSummary.textContent = data.error || 'Credenciales inválidas.';
+                if (data.noVerificado && data.email) {
+                    errorSummary.innerHTML = `
+                        <div style="text-align:left;">
+                            <strong style="color:#991B1B; display:block; margin-bottom:4px;">⚠️ Cuenta no verificada</strong>
+                            <p style="margin:4px 0 10px; color:#7F1D1D;">${data.error}</p>
+                            <a href="/Paginas/inscripcion.html?email=${encodeURIComponent(data.email)}&verificar=1" class="primary" style="display:inline-block; padding:6px 12px; font-size:13px; text-decoration:none; border-radius:4px; font-weight:600; background:var(--blue); color:white;">Ingresar código de verificación →</a>
+                        </div>
+                    `;
+                } else {
+                    errorSummary.textContent = data.error || 'Credenciales inválidas.';
+                }
                 errorSummary.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Entrar';

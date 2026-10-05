@@ -1,8 +1,10 @@
 "use strict";
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const fs = require("fs");
@@ -41,6 +43,91 @@ function rateLimit(maxRequests, windowMs) {
 }
 const loginLimiter = rateLimit(100, 5 * 60 * 1000); // 100 requests per 5 minutes
 
+function validarPasswordComplejidad(pwd) {
+  if (typeof pwd !== "string" || pwd.length < 8 || pwd.length > 128) {
+    return "La contraseña debe tener entre 8 y 128 caracteres.";
+  }
+  if (!/[A-Z]/.test(pwd)) {
+    return "La contraseña debe incluir al menos una letra mayúscula.";
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~^`]/.test(pwd)) {
+    return "La contraseña debe incluir al menos un carácter especial.";
+  }
+  return null;
+}
+
+function validarEmailFormato(email) {
+  if (typeof email !== "string") return "El correo electrónico es inválido.";
+  const emailNorm = email.trim().toLowerCase();
+  if (!emailNorm) return "El correo electrónico es obligatorio.";
+  if (emailNorm.length > 254) return "El correo es demasiado largo (máximo 254 caracteres).";
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  if (!emailRegex.test(emailNorm)) {
+    return "Escribe un correo electrónico válido (ejemplo: usuario@dominio.com).";
+  }
+  return null;
+}
+
+function generarCodigoToken() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function createMailTransporter() {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    return null;
+  }
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER.trim(),
+      pass: process.env.GMAIL_PASS.replace(/\s+/g, "")
+    }
+  });
+}
+
+async function enviarTokenGmail(destinatario, token) {
+  console.log(`\n📧 [VERIFICACIÓN] Código generado para ${destinatario}: [ ${token} ]`);
+  const transporter = createMailTransporter();
+  if (!transporter) {
+    console.warn("⚠️ [GMAIL] GMAIL_USER o GMAIL_PASS no configurados en .env. Revisa el archivo .env para habilitar el envío en vivo por Gmail.");
+    return { enviado: false, motivo: "credenciales_no_configuradas" };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Universidad Horizonte del Sureste" <${process.env.GMAIL_USER}>`,
+      to: destinatario,
+      subject: `Código de verificación: ${token} - Portal UHS`,
+      text: `Hola,\n\nTu código de verificación para completar tu registro en la Universidad Horizonte del Sureste es: ${token}\n\nEste código es válido por 15 minutos.\n\nSi no solicitaste este registro, por favor ignora este mensaje.\n\nUniversidad Horizonte del Sureste`,
+      html: `
+        <div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:520px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+          <div style="background:#0f172a; padding:24px; text-align:center; color:#ffffff;">
+            <h1 style="margin:0; font-size:20px; font-weight:700;">Universidad Horizonte del Sureste</h1>
+            <p style="margin:4px 0 0; font-size:13px; color:#94a3b8;">Portal de Admisión e Inscripciones</p>
+          </div>
+          <div style="padding:32px 24px; text-align:center; color:#1e293b;">
+            <h2 style="font-size:18px; margin:0 0 12px; color:#0f172a;">Verificación de identidad</h2>
+            <p style="font-size:14px; line-height:1.5; color:#475569; margin:0 0 24px;">Ingresa el siguiente código de verificación en el portal para activar tu cuenta de aspirante:</p>
+            <div style="display:inline-block; background:#f1f5f9; border:2px dashed #2563eb; border-radius:8px; padding:14px 28px; font-size:28px; font-weight:800; letter-spacing:6px; color:#1e40af; margin-bottom:20px;">
+              ${token}
+            </div>
+            <p style="font-size:12px; color:#64748b; margin:0;">⏱️ Este código vence en <strong>15 minutos</strong>.</p>
+            <p style="font-size:12px; color:#94a3b8; margin:24px 0 0;">Si no intentaste crear una cuenta en el portal de la UHS, puedes ignorar este correo.</p>
+          </div>
+          <div style="background:#f8fafc; padding:14px; text-align:center; font-size:11px; color:#94a3b8; border-top:1px solid #e2e8f0;">
+            Universidad Horizonte del Sureste · Proyecto académico 2026
+          </div>
+        </div>
+      `
+    });
+    console.log(`✅ [GMAIL] Correo enviado exitosamente a ${destinatario} (ID: ${info.messageId})`);
+    return { enviado: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ [GMAIL] Error enviando correo a ${destinatario}:`, err.message);
+    return { enviado: false, error: err.message };
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    Almacenamiento JSON en disco
    ═══════════════════════════════════════════════════════════ */
@@ -72,10 +159,10 @@ function readObj(file)  { return readJSON(file) || {}; }
 /* ── Datos iniciales ────────────────────────────────────── */
 function initData() {
   if (!readJSON("usuarios.json")) {
-    const hash = bcrypt.hashSync("admin1234admin", 10);
+    const hash = bcrypt.hashSync("Admin1234#admin", 10);
     writeJSON("usuarios.json", [
       { id: uuidv4(), email: "admin@uhs.edu.mx", passwordHash: hash, role: "admin", nombre: "Administrador UHS", verified: true, createdAt: new Date().toISOString() },
-      { id: uuidv4(), email: "control@uhs.edu.mx", passwordHash: bcrypt.hashSync("control1234ctrl", 10), role: "control_escolar", nombre: "Control Escolar", verified: true, createdAt: new Date().toISOString() }
+      { id: uuidv4(), email: "control@uhs.edu.mx", passwordHash: bcrypt.hashSync("Control1234#ctrl", 10), role: "control_escolar", nombre: "Control Escolar", verified: true, createdAt: new Date().toISOString() }
     ]);
   }
   if (!readJSON("expedientes.json")) writeJSON("expedientes.json", []);
@@ -151,10 +238,68 @@ function requireRole(...roles) {
    ═══════════════════════════════════════════════════════════ */
 app.use("/CSS", express.static(path.join(__dirname, "CSS")));
 app.use("/Java", express.static(path.join(__dirname, "Java")));
-app.use("/Paginas", express.static(path.join(__dirname, "Paginas")));
 
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "Paginas", "Pagina_principal.html")));
-app.get("/index.html", (_req, res) => res.redirect("/"));
+// RF-05: Determinar ruta de panel según el rol del usuario
+function getPanelPorRol(role) {
+  if (role === "admin") return "/Paginas/admin_panel.html";
+  if (role === "control_escolar") return "/Paginas/control.html";
+  return "/Paginas/panel.html";
+}
+
+// RF-05: Redirigir al panel correspondiente si el usuario tiene sesión activa
+function redirigirSiAutenticado(req, res, next) {
+  if (req.session && req.session.userId) {
+    return res.redirect(getPanelPorRol(req.session.role));
+  }
+  next();
+}
+
+// Ruta principal y redirecciones para usuarios con sesión activa
+app.get("/", redirigirSiAutenticado, (_req, res) => res.sendFile(path.join(__dirname, "Paginas", "Pagina_principal.html")));
+app.get("/index.html", redirigirSiAutenticado, (_req, res) => res.redirect("/"));
+
+// RF-05: Evitar acceder a la pestaña principal y páginas públicas cuando la sesión está iniciada
+const paginasPublicas = [
+  "/Paginas/Pagina_principal.html",
+  "/Paginas/acceso.html",
+  "/Paginas/inscripcion.html",
+  "/Paginas/convocatoria.html",
+  "/Paginas/oferta.html",
+  "/Paginas/requisitos.html",
+  "/Paginas/ayuda.html",
+  "/Paginas/carrera.html",
+  "/Paginas/sistemas.html",
+  "/Paginas/administracion.html",
+  "/Paginas/diseno.html"
+];
+app.get(paginasPublicas, redirigirSiAutenticado);
+
+// RF-05: Restringir cada panel exclusivamente al rol autorizado
+app.get("/Paginas/admin_panel.html", (req, res, next) => {
+  if (!req.session || !req.session.userId) return res.redirect("/Paginas/acceso.html");
+  if (req.session.role !== "admin") return res.redirect(getPanelPorRol(req.session.role));
+  next();
+});
+
+app.get("/Paginas/control.html", (req, res, next) => {
+  if (!req.session || !req.session.userId) return res.redirect("/Paginas/acceso.html");
+  if (req.session.role !== "control_escolar") return res.redirect(getPanelPorRol(req.session.role));
+  next();
+});
+
+app.get("/Paginas/panel.html", (req, res, next) => {
+  if (!req.session || !req.session.userId) return res.redirect("/Paginas/acceso.html");
+  if (req.session.role !== "aspirante") return res.redirect(getPanelPorRol(req.session.role));
+  next();
+});
+
+app.get(["/Paginas/expediente.html", "/Paginas/seguimiento.html"], (req, res, next) => {
+  if (!req.session || !req.session.userId) return res.redirect("/Paginas/acceso.html");
+  if (req.session.role !== "aspirante") return res.redirect(getPanelPorRol(req.session.role));
+  next();
+});
+
+app.use("/Paginas", express.static(path.join(__dirname, "Paginas")));
 
 /* ═══════════════════════════════════════════════════════════
    API — Autenticación
@@ -163,35 +308,46 @@ app.get("/index.html", (_req, res) => res.redirect("/"));
 // Verificar disponibilidad de correo
 app.get("/api/verificar-correo", (req, res) => {
   const email = req.query.email;
-  if (!email || typeof email !== "string") {
-    return res.json({ existe: false });
+  const emailErr = validarEmailFormato(email);
+  if (emailErr) {
+    return res.status(400).json({ existe: false, valido: false, error: emailErr });
   }
   const emailNorm = email.trim().toLowerCase();
   const usuarios = readList("usuarios.json");
   const existe = usuarios.some(u => u.email === emailNorm);
-  res.json({ existe, email: emailNorm });
+  res.json({ existe, valido: true, email: emailNorm });
 });
 
 // Registro de aspirante
 app.post("/api/registro", loginLimiter, async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, aceptaPrivacidad } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Correo y contraseña son obligatorios." });
   if (typeof email !== "string" || typeof password !== "string") {
     return res.status(400).json({ error: "Datos de entrada inválidos." });
   }
+  if (!aceptaPrivacidad || (aceptaPrivacidad !== true && aceptaPrivacidad !== "true")) {
+    return res.status(400).json({ error: "Debes aceptar los términos y el aviso de privacidad para continuar con tu registro." });
+  }
+  const emailErr = validarEmailFormato(email);
+  if (emailErr) return res.status(400).json({ error: emailErr });
+  const pwdErr = validarPasswordComplejidad(password);
+  if (pwdErr) return res.status(400).json({ error: pwdErr });
   const emailNorm = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return res.status(400).json({ error: "Escribe un correo electrónico válido." });
-  if (emailNorm.length > 254) return res.status(400).json({ error: "El correo es demasiado largo." });
-  if (password.length < 12 || password.length > 128) return res.status(400).json({ error: "La contraseña debe tener entre 12 y 128 caracteres." });
 
   const hash = await bcrypt.hash(password, 10);
   const usuarios = readList("usuarios.json");
   if (usuarios.find(u => u.email === emailNorm)) {
     return res.status(409).json({ error: "Ya existe una cuenta con ese correo.", existe: true });
   }
+  const token = generarCodigoToken();
+  const tokenExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   const user = {
     id: uuidv4(), email: emailNorm, passwordHash: hash,
-    role: "aspirante", nombre: "", verified: true,
+    role: "aspirante", nombre: "", verified: false,
+    verificationToken: token,
+    verificationExpires: tokenExpires,
+    aceptaPrivacidad: true,
+    privacidadAceptadaAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   };
   usuarios.push(user);
@@ -202,7 +358,7 @@ app.post("/api/registro", loginLimiter, async (req, res) => {
   expedientes.push({
     id: uuidv4(), userId: user.id, folio: null,
     estado: "borrador",
-    datos: { nombre: "", apellidoPaterno: "", apellidoMaterno: "", fechaNacimiento: "", telefono: "", domicilio: "", bachillerato: "", curp: "", carrera: "" },
+    datos: { nombre: "", apellidoPaterno: "", apellidoMaterno: "", fechaNacimiento: "", telefono: "", bachillerato: "", curp: "", carrera: "" },
     documentos: [],
     observaciones: [],
     historial: [{ estado: "borrador", fecha: new Date().toISOString(), nota: "Cuenta creada" }],
@@ -210,11 +366,85 @@ app.post("/api/registro", loginLimiter, async (req, res) => {
   });
   writeJSON("expedientes.json", expedientes);
 
+  // Enviar token por Gmail en tiempo real
+  const mailResult = await enviarTokenGmail(emailNorm, token);
+
+  res.json({
+    ok: true,
+    requiereVerificacion: true,
+    email: emailNorm,
+    mailEnviado: mailResult.enviado,
+    message: mailResult.enviado
+      ? "Hemos enviado un código de verificación a tu correo de Gmail."
+      : "Se generó tu código de verificación. (Revisa la consola del servidor o configura tu archivo .env)",
+    tokenDev: !mailResult.enviado ? token : undefined
+  });
+});
+
+// Verificar token de correo
+app.post("/api/verificar-token", loginLimiter, (req, res) => {
+  const { email, token } = req.body;
+  if (!email || !token) return res.status(400).json({ error: "Correo y código de verificación son obligatorios." });
+  const emailNorm = email.trim().toLowerCase();
+  const tokenNorm = String(token).trim();
+
+  const usuarios = readList("usuarios.json");
+  const user = usuarios.find(u => u.email === emailNorm);
+  if (!user) return res.status(404).json({ error: "Usuario no encontrado." });
+  if (user.verified) {
+    req.session.userId = user.id;
+    req.session.role = user.role;
+    req.session.email = user.email;
+    req.session.nombre = user.nombre || user.email;
+    return res.json({ ok: true, message: "Tu cuenta ya está verificada.", redirect: "/Paginas/expediente.html" });
+  }
+
+  if (!user.verificationToken || user.verificationToken !== tokenNorm) {
+    return res.status(400).json({ error: "El código de verificación es incorrecto." });
+  }
+
+  if (new Date() > new Date(user.verificationExpires)) {
+    return res.status(400).json({ error: "El código de verificación ha expirado. Solicita uno nuevo.", expirado: true });
+  }
+
+  user.verified = true;
+  user.verificationToken = null;
+  user.verificationExpires = null;
+  writeJSON("usuarios.json", usuarios);
+
   req.session.userId = user.id;
   req.session.role = user.role;
   req.session.email = user.email;
   req.session.nombre = user.nombre || user.email;
-  res.json({ ok: true, message: "Cuenta creada. En un entorno real se enviaría un correo de verificación.", redirect: "/Paginas/panel.html" });
+
+  res.json({ ok: true, message: "Cuenta verificada con éxito.", redirect: "/Paginas/expediente.html" });
+});
+
+// Reenviar token de correo
+app.post("/api/reenviar-token", loginLimiter, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "El correo es obligatorio." });
+  const emailNorm = email.trim().toLowerCase();
+
+  const usuarios = readList("usuarios.json");
+  const user = usuarios.find(u => u.email === emailNorm);
+  if (!user) return res.status(404).json({ error: "Usuario no encontrado." });
+  if (user.verified) return res.status(400).json({ error: "Esta cuenta ya está verificada. Puedes iniciar sesión." });
+
+  const token = generarCodigoToken();
+  user.verificationToken = token;
+  user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  writeJSON("usuarios.json", usuarios);
+
+  const mailResult = await enviarTokenGmail(emailNorm, token);
+  res.json({
+    ok: true,
+    mailEnviado: mailResult.enviado,
+    message: mailResult.enviado
+      ? "Te hemos enviado un nuevo código de verificación a tu Gmail."
+      : "Se generó un nuevo código de verificación.",
+    tokenDev: !mailResult.enviado ? token : undefined
+  });
 });
 
 // Inicio de sesión
@@ -224,11 +454,25 @@ app.post("/api/login", loginLimiter, async (req, res) => {
   if (typeof email !== "string" || typeof password !== "string") {
     return res.status(400).json({ error: "Datos de entrada inválidos." });
   }
+  const emailErr = validarEmailFormato(email);
+  if (emailErr) return res.status(400).json({ error: emailErr });
+  const pwdErr = validarPasswordComplejidad(password);
+  if (pwdErr) return res.status(400).json({ error: pwdErr });
+
   const emailNorm = email.trim().toLowerCase();
   const usuarios = readList("usuarios.json");
   const user = usuarios.find(u => u.email === emailNorm);
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: "Correo o contraseña incorrectos." });
+  }
+
+  // RF-03: Bloquear acceso si la cuenta no ha sido verificada
+  if (!user.verified) {
+    return res.status(403).json({
+      error: "Tu cuenta aún no ha sido verificada con el código enviado a tu correo.",
+      noVerificado: true,
+      email: user.email
+    });
   }
   req.session.userId = user.id;
   req.session.role = user.role;
@@ -291,7 +535,7 @@ app.put("/api/expediente", requireRole("aspirante"), (req, res) => {
     return res.status(400).json({ error: "Tu solicitud ya fue enviada y no se puede editar libremente." });
   }
 
-  const campos = ["nombre", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento", "telefono", "domicilio", "bachillerato", "curp", "carrera"];
+  const campos = ["nombre", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento", "telefono", "bachillerato", "curp", "carrera"];
 
   // Si tiene observaciones, solo se pueden editar campos señalados
   if (exp.estado === "con_observaciones") {
@@ -330,6 +574,109 @@ app.put("/api/expediente", requireRole("aspirante"), (req, res) => {
   res.json({ ok: true, expediente: exp });
 });
 
+// RF-06: Validación general de información y documentos del expediente
+function validarExpedienteGeneral(datos, documentos, estado) {
+  const errores = [];
+  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]{2,60}$/;
+  const curpRegex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/;
+
+  // 1. Nombre(s)
+  if (!datos.nombre || !datos.nombre.trim()) {
+    errores.push("El nombre(s) es obligatorio.");
+  } else if (!nombreRegex.test(datos.nombre.trim())) {
+    errores.push("El nombre(s) solo debe contener letras (entre 2 y 60 caracteres).");
+  }
+
+  // 2. Apellido Paterno
+  if (!datos.apellidoPaterno || !datos.apellidoPaterno.trim()) {
+    errores.push("El apellido paterno es obligatorio.");
+  } else if (!nombreRegex.test(datos.apellidoPaterno.trim())) {
+    errores.push("El apellido paterno solo debe contener letras (entre 2 y 60 caracteres).");
+  }
+
+  // 3. Apellido Materno (Obligatorio - RF-08)
+  if (!datos.apellidoMaterno || !datos.apellidoMaterno.trim()) {
+    errores.push("El apellido materno es obligatorio.");
+  } else if (!nombreRegex.test(datos.apellidoMaterno.trim())) {
+    errores.push("El apellido materno solo debe contener letras (entre 2 y 60 caracteres).");
+  }
+
+  // 4. Fecha de nacimiento coherente
+  if (!datos.fechaNacimiento || !datos.fechaNacimiento.trim()) {
+    errores.push("La fecha de nacimiento es obligatoria.");
+  } else {
+    const fn = new Date(datos.fechaNacimiento);
+    const hoy = new Date();
+    if (isNaN(fn.getTime())) {
+      errores.push("La fecha de nacimiento no es válida.");
+    } else {
+      let edad = hoy.getFullYear() - fn.getFullYear();
+      const m = hoy.getMonth() - fn.getMonth();
+      if (m < 0 || (m === 0 && hoy.getDate() < fn.getDate())) edad--;
+      if (fn > hoy) {
+        errores.push("La fecha de nacimiento no puede ser en el futuro.");
+      } else if (edad < 14) {
+        errores.push("El aspirante debe tener al menos 14 años de edad cumplidos.");
+      } else if (edad > 100) {
+        errores.push("La fecha de nacimiento ingresada no es coherente.");
+      }
+    }
+  }
+
+  // 5. Teléfono (10 dígitos)
+  const telLimpio = String(datos.telefono || "").replace(/\D/g, "");
+  if (!telLimpio) {
+    errores.push("El número de teléfono es obligatorio.");
+  } else if (telLimpio.length !== 10) {
+    errores.push("El número de teléfono debe contener exactamente 10 dígitos numéricos.");
+  }
+
+  // 6. Bachillerato
+  if (!datos.bachillerato || !datos.bachillerato.trim() || datos.bachillerato.trim().length < 3) {
+    errores.push("La escuela de bachillerato de procedencia es obligatoria (mínimo 3 caracteres).");
+  }
+
+  // 7. Carrera de interés y cupo
+  if (!datos.carrera || !datos.carrera.trim()) {
+    errores.push("Debes seleccionar una carrera de interés.");
+  } else {
+    const carreras = readList("carreras.json");
+    const car = carreras.find(c => c.id === datos.carrera);
+    if (!car) {
+      errores.push("La carrera seleccionada no es válida.");
+    } else if (car.cupo - car.inscritos <= 0) {
+      errores.push(`La carrera ${car.nombre} no tiene cupo disponible.`);
+    }
+  }
+
+  // 8. CURP (18 caracteres RENAPO)
+  const curpVal = String(datos.curp || "").trim().toUpperCase();
+  if (!curpVal) {
+    errores.push("La clave CURP es obligatoria para proceder con el trámite.");
+  } else if (!curpRegex.test(curpVal)) {
+    errores.push("La CURP debe tener el formato oficial de 18 caracteres de RENAPO (ej. MACA040819MYCNRN03).");
+  }
+
+  // 9. Documentos obligatorios (los 4: acta_nacimiento, certificado_bachillerato, identificacion, comprobante_domicilio)
+  const docsRequeridos = [
+    { tipo: "acta_nacimiento", nombre: "Acta de Nacimiento" },
+    { tipo: "certificado_bachillerato", nombre: "Certificado de Bachillerato" },
+    { tipo: "identificacion", nombre: "Identificación Oficial" },
+    { tipo: "comprobante_domicilio", nombre: "Comprobante de Domicilio" }
+  ];
+  const docsSubidos = Array.isArray(documentos) ? documentos : [];
+  for (const docReq of docsRequeridos) {
+    const docFound = docsSubidos.find(d => d.tipo === docReq.tipo);
+    if (!docFound) {
+      errores.push(`Falta subir el documento obligatorio: ${docReq.nombre}.`);
+    } else if (estado === "con_observaciones" && docFound.estado === "rechazado") {
+      errores.push(`El documento ${docReq.nombre} fue rechazado y debe ser reemplazado antes de enviar.`);
+    }
+  }
+
+  return errores;
+}
+
 // Enviar solicitud
 app.post("/api/expediente/enviar", requireRole("aspirante"), (req, res) => {
   const expedientes = readList("expedientes.json");
@@ -352,24 +699,13 @@ app.post("/api/expediente/enviar", requireRole("aspirante"), (req, res) => {
     return res.status(400).json({ error: "El periodo de correcciones ha cerrado." });
   }
 
-  // Validar campos obligatorios
-  const obligatorios = ["nombre", "apellidoPaterno", "fechaNacimiento", "telefono", "bachillerato", "carrera"];
-  const faltantes = obligatorios.filter(c => !exp.datos[c] || !exp.datos[c].trim());
-  if (faltantes.length) {
-    return res.status(400).json({ error: "Faltan campos obligatorios.", faltantes });
-  }
-
-  // Verificar cupo
-  const carreras = readList("carreras.json");
-  const carrera = carreras.find(c => c.id === exp.datos.carrera);
-  if (!carrera) return res.status(400).json({ error: "La carrera seleccionada no es válida." });
-  if (carrera.cupo - carrera.inscritos <= 0) return res.status(400).json({ error: `La carrera ${carrera.nombre} no tiene cupo disponible.` });
-
-  // Verificar documentos mínimos
-  const docsRequeridos = ["acta_nacimiento", "certificado_bachillerato"];
-  const docsFaltantes = docsRequeridos.filter(d => !exp.documentos.find(doc => doc.tipo === d));
-  if (docsFaltantes.length && exp.estado === "borrador") {
-    return res.status(400).json({ error: "Faltan documentos obligatorios.", docsFaltantes });
+  // RF-06: Validación general completa antes de proceder
+  const erroresValidacion = validarExpedienteGeneral(exp.datos || {}, exp.documentos || [], exp.estado);
+  if (erroresValidacion.length > 0) {
+    return res.status(400).json({
+      error: "No se puede enviar la solicitud. Existen inconsistencias o datos faltantes en el expediente.",
+      detalles: erroresValidacion
+    });
   }
 
   // Generar folio
@@ -409,7 +745,7 @@ app.post("/api/expediente/documentos/:tipo", requireRole("aspirante"), (req, res
     }
   }
 
-  const tiposValidos = ["acta_nacimiento", "certificado_bachillerato", "identificacion"];
+  const tiposValidos = ["acta_nacimiento", "certificado_bachillerato", "identificacion", "comprobante_domicilio"];
   if (!tiposValidos.includes(req.params.tipo)) {
     return res.status(400).json({ error: "Tipo de documento no válido." });
   }
@@ -642,7 +978,10 @@ app.post("/api/admin/usuarios", requireRole("admin"), async (req, res) => {
   if (!nombre || nombre.trim().length < 2 || nombre.trim().length > 100) {
     return res.status(400).json({ error: "El nombre debe tener entre 2 y 100 caracteres." });
   }
-  if (password.length < 12) return res.status(400).json({ error: "La contraseña debe tener al menos 12 caracteres." });
+  const emailErrAdmin = validarEmailFormato(email);
+  if (emailErrAdmin) return res.status(400).json({ error: emailErrAdmin });
+  const pwdErrAdmin = validarPasswordComplejidad(password);
+  if (pwdErrAdmin) return res.status(400).json({ error: pwdErrAdmin });
 
   const hash = await bcrypt.hash(password, 10);
   const usuarios = readList("usuarios.json");
@@ -757,7 +1096,7 @@ app.use((err, _req, res, _next) => {
    ═══════════════════════════════════════════════════════════ */
 app.listen(PORT, () => {
   console.log(`\n  Portal UHS: http://localhost:${PORT}`);
-  console.log(`  Admin:   admin@uhs.edu.mx / admin1234admin`);
-  console.log(`  Control: control@uhs.edu.mx / control1234ctrl`);
+  console.log(`  Admin:   admin@uhs.edu.mx / Admin1234#admin`);
+  console.log(`  Control: control@uhs.edu.mx / Control1234#ctrl`);
   console.log(`  Para detener: Ctrl+C\n`);
 });

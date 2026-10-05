@@ -12,8 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await fetch('/api/sesion');
     const data = await res.json();
-    if (!data.autenticado || (data.role !== 'control_escolar' && data.role !== 'admin')) {
+    if (!data.autenticado) {
       window.location.href = '/Paginas/acceso.html';
+      return;
+    }
+    if (data.role !== 'control_escolar' && data.role !== 'admin') {
+      window.location.replace('/Paginas/panel.html');
       return;
     }
     currentUser = data;
@@ -200,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const fields = Object.entries(currentExpediente.datos);
+    const fields = Object.entries(currentExpediente.datos).filter(([key]) => key !== 'domicilio');
     fields.forEach(([key, val]) => {
       const div = document.createElement('div');
       div.className = 'review-field';
@@ -251,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion'];
+    const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion', 'comprobante_domicilio'];
     const isRevisable = currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision';
 
     docTipos.forEach(tipo => {

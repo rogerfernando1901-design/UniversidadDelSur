@@ -16,7 +16,7 @@
   <div class="demo">Proyecto académico · Utiliza únicamente datos ficticios</div>
   <header class="header">
     <div class="container header-inner">
-      <a class="brand brand-link" href="/" aria-label="Universidad Horizonte del Sureste, inicio" style="text-decoration:none; flex-grow: 1;">
+      <a class="brand brand-link" href="/Paginas/panel.html" aria-label="Universidad Horizonte del Sureste, mi panel" style="text-decoration:none; flex-grow: 1;">
         <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
         <div><strong>Horizonte del Sureste</strong><span>UNIVERSIDAD</span></div>
       </a>
@@ -38,6 +38,7 @@
             <span id="header-status-badge" class="status-badge"></span>
         </div>
 
+        <div id="observaciones-banner" class="notice" style="display:none; background-color: #FEF2F2; border-left: 4px solid var(--error); border-color: #FECACA; color: #991B1B; margin-bottom: 24px;"></div>
         <div id="general-error" class="notice" style="display:none; background-color: #FEF2F2; border-color: #F87171; color: #991B1B; margin-bottom: 24px;"></div>
 
         <form id="expediente-form">
@@ -46,36 +47,32 @@
                 <div class="form-grid">
                     <div class="field">
                         <label for="nombre">Nombre(s) *</label>
-                        <input type="text" id="nombre" name="nombre" required>
+                        <input type="text" id="nombre" name="nombre" required minlength="2" maxlength="60" placeholder="Ej. Juan Carlos">
                     </div>
                     <div class="field">
                         <label for="apellidoPaterno">Apellido Paterno *</label>
-                        <input type="text" id="apellidoPaterno" name="apellidoPaterno" required>
+                        <input type="text" id="apellidoPaterno" name="apellidoPaterno" required minlength="2" maxlength="60" placeholder="Ej. Gómez">
                     </div>
                     <div class="field">
-                        <label for="apellidoMaterno">Apellido Materno</label>
-                        <input type="text" id="apellidoMaterno" name="apellidoMaterno">
+                        <label for="apellidoMaterno">Apellido Materno *</label>
+                        <input type="text" id="apellidoMaterno" name="apellidoMaterno" required minlength="2" maxlength="60" placeholder="Ej. López">
                     </div>
                     <div class="field">
                         <label for="fechaNacimiento">Fecha de Nacimiento *</label>
                         <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
                     </div>
                     <div class="field">
-                        <label for="telefono">Teléfono *</label>
-                        <input type="tel" id="telefono" name="telefono" required>
+                        <label for="telefono">Teléfono (10 dígitos) *</label>
+                        <input type="tel" id="telefono" name="telefono" required pattern="[0-9]{10}" maxlength="10" placeholder="Ej. 9611234567">
                     </div>
                     <div class="field">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <label for="curp" style="margin-bottom:0;">CURP (Opcional)</label>
+                            <label for="curp" style="margin-bottom:0;">CURP *</label>
                             <button type="button" id="btn-calcular-curp" style="background:none; border:none; color:var(--blue); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;">⚡ Generar con mis datos</button>
                         </div>
-                        <input type="text" id="curp" name="curp" maxlength="18" placeholder="Ej. MACA040819MYCNRN03" style="text-transform:uppercase;" autocomplete="off">
+                        <input type="text" id="curp" name="curp" maxlength="18" required placeholder="Ej. MACA040819MYCNRN03" style="text-transform:uppercase;" autocomplete="off">
                         <small id="curp-hint" style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">18 caracteres alfanuméricos oficiales (RENAPO)</small>
                     </div>
-                </div>
-                <div class="field" style="grid-column: 1 / -1;">
-                    <label for="domicilio">Domicilio completo</label>
-                    <textarea id="domicilio" name="domicilio" rows="2"></textarea>
                 </div>
             </div>
 

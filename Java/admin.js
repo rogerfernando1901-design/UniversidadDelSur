@@ -4,8 +4,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await fetch('/api/sesion');
     const data = await res.json();
-    if (!data.autenticado || data.role !== 'admin') {
+    if (!data.autenticado) {
       window.location.href = '/Paginas/acceso.html';
+      return;
+    }
+    if (data.role !== 'admin') {
+      const panels = {
+        control_escolar: '/Paginas/control.html',
+        aspirante: '/Paginas/panel.html'
+      };
+      window.location.replace(panels[data.role] || '/Paginas/admin_panel.html');
       return;
     }
     currentUser = data;
@@ -346,10 +354,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   formUser.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const pwd = document.getElementById('usr-pass').value;
+    if (pwd.length < 8 || pwd.length > 128) {
+      showToast('La contraseña debe tener entre 8 y 128 caracteres.', 'error');
+      return;
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      showToast('La contraseña debe incluir al menos una letra mayúscula.', 'error');
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~^`]/.test(pwd)) {
+      showToast('La contraseña debe incluir al menos un carácter especial.', 'error');
+      return;
+    }
+
+    const emailVal = document.getElementById('usr-email').value.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    if (!emailVal || !emailRegex.test(emailVal) || emailVal.length > 254) {
+      showToast('Escribe un correo electrónico válido (ejemplo: usuario@dominio.com).', 'error');
+      return;
+    }
+
     const body = {
       nombre: document.getElementById('usr-nombre').value,
-      email: document.getElementById('usr-email').value,
-      password: document.getElementById('usr-pass').value,
+      email: emailVal,
+      password: pwd,
       role: document.getElementById('usr-rol').value
     };
     try {

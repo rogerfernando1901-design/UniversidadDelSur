@@ -1,5 +1,23 @@
 "use strict";
 
+// RF-05: Si el usuario ya cuenta con sesión activa, redirigir a su panel correspondiente
+(async () => {
+  try {
+    const res = await fetch("/api/sesion");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.autenticado) {
+        const panels = {
+          aspirante: "/Paginas/panel.html",
+          control_escolar: "/Paginas/control.html",
+          admin: "/Paginas/admin_panel.html"
+        };
+        window.location.replace(panels[data.role] || "/Paginas/panel.html");
+      }
+    }
+  } catch (_) {}
+})();
+
 // Contrato de navegación
 const routes = {
   oferta: "/Paginas/oferta.html",
