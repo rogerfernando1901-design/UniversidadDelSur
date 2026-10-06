@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel de Control Escolar">
+  <title>Panel de Control Escolar | UHS Portal Interno</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/CSS/Pagina_principal.css">
+  <link rel="stylesheet" href="/CSS/inscripcion.css">
+  <link rel="stylesheet" href="/CSS/staff.css">
+  <script src="/Java/control.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <div class="demo" style="background:var(--blue)">Portal interno · Proyecto académico</div>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand brand-link" href="/Paginas/control.html" aria-label="UHS Portal Interno" style="text-decoration:none">
+        <span class="brand-mark" aria-hidden="true">UHS<span></span></span>
+        <div><strong>Portal Interno</strong><span>CONTROL ESCOLAR</span></div>
+      </a>
+      <nav class="staff-nav" id="staff-nav" style="display:flex; align-items:center; gap:14px;">
+        <span id="user-name" style="color:var(--navy); font-weight:700; font-size:14px;">Control Escolar</span>
+        <button id="logout-btn" type="button" style="background:#fef2f2; border:1px solid #ef4444; color:#b91c1c; padding:6px 14px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; min-height:unset; box-shadow:0 1px 2px rgba(239,68,68,0.1);">Cerrar sesión</button>
+      </nav>
+    </div>
+  </header>
+  <main class="container staff-page" id="contenido" tabindex="-1">
+    
+    <!-- Vista: Lista de Solicitudes -->
+    <div id="view-list">
+      <h1>Panel de Control Escolar</h1>
+      <div class="staff-filters">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar por nombre o folio...">
+        <select id="status-filter" class="filter-select">
+          <option value="todas">Todas</option>
+          <option value="enviada">Enviadas</option>
+          <option value="con_observaciones">Con observaciones</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="confirmada">Confirmadas</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table class="staff-table" id="solicitudes-table">
+          <thead>
+            <tr>
+              <th>Folio</th>
+              <th>Aspirante</th>
+              <th>Carrera</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display: none;">
+          No hay solicitudes que coincidan con la búsqueda.
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Detalle de Solicitud -->
+    <div id="view-detail" style="display: none;">
+      <a href="#" id="back-btn" class="back-button">← Volver a la lista</a>
+      
+      <div class="review-section">
+        <h2 id="detail-name">Nombre del Aspirante</h2>
+        <p><strong>Folio:</strong> <span id="detail-folio"></span></p>
+        <p><strong>Email:</strong> <span id="detail-email"></span></p>
+        <p><strong>Estado actual:</strong> <span id="detail-status" class="badge"></span></p>
+      </div>
+
+      <div class="review-panel">
+        <div class="review-section">
+          <h3>Datos del Aspirante</h3>
+          <div id="datos-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="review-section">
+          <h3>Documentos</h3>
+          <div id="docs-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="review-section">
+        <h3>Historial</h3>
+        <ul id="historial-container">
+          <!-- Populated via JS -->
+        </ul>
+      </div>
+
+      <div class="action-bar" id="action-bar">
+        <!-- Actions populated via JS -->
+      </div>
+    </div>
+    
+  </main>
+  
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>Universidad Horizonte del Sureste</strong>
+        <p>Portal interno · Proyecto académico 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal de confirmación genérico -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Confirmar</h3>
+      <p id="modal-msg">¿Estás seguro?</p>
+      <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2rem;">
+        <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="modal-confirm" class="btn btn-primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Visualizador de Documentos (RF3.3) -->
+  <div id="doc-viewer-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Visor de documento">
+    <div class="doc-viewer-container">
+      <!-- Panel izquierdo: controles de revisión -->
+      <div class="doc-viewer-controls">
+        <div class="doc-viewer-header">
+          <div class="doc-viewer-title-group">
+            <h3 id="doc-viewer-title">Documento</h3>
+            <p id="doc-viewer-subtitle">Aspirante</p>
+          </div>
+          <button id="doc-viewer-close" class="doc-viewer-close-btn" aria-label="Cerrar visor">✕ Cerrar</button>
+        </div>
+        
+        <div id="doc-viewer-review-controls">
+          <p style="font-weight:700; margin:0 0 0.75rem 0; color:var(--navy); font-size:0.95rem;">Decisión de Revisión:</p>
+          <div class="decision-card-group">
+            <label class="decision-card approve-card" id="card-decision-aprobar">
+              <input type="radio" name="viewer-decision" value="aprobar" id="viewer-radio-aprobar">
+              <span>✓ Aprobar Documento</span>
+            </label>
+            <label class="decision-card reject-card" id="card-decision-rechazar">
+              <input type="radio" name="viewer-decision" value="rechazar" id="viewer-radio-rechazar">
+              <span>✕ Rechazar Documento</span>
+            </label>
+          </div>
+          
+          <div id="viewer-obs-container" class="reject-reason-box" style="display:none;">
+            <label for="viewer-obs-input">Motivo de rechazo (obligatorio) *</label>
+            <textarea id="viewer-obs-input" rows="3" placeholder="Describe claramente qué debe corregir el aspirante..."></textarea>
+          </div>
+          
+          <div class="doc-viewer-actions">
+            <button id="doc-viewer-save" class="btn btn-primary btn-save">Guardar Decisión</button>
+            <a id="viewer-tab-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-tab-link">↗ Abrir en pestaña nueva</a>
+          </div>
+        </div>
+
+        <!-- Muestra cuando el expediente no está en revisión -->
+        <div id="doc-viewer-readonly" style="display:none; padding:1.25rem; background:#f1f5f9; border-radius:8px; margin-top:1rem;">
+          <p style="color:var(--muted); font-size:0.9rem; margin:0 0 1rem 0; line-height:1.5;">Este expediente no está en periodo de revisión activa. Puedes consultar el archivo a la derecha.</p>
+          <a id="viewer-tab-link-readonly" href="#" target="_blank" rel="noopener noreferrer" class="btn-tab-link" style="font-weight:600;">↗ Abrir en pestaña completa</a>
+        </div>
+      </div>
+      
+      <!-- Panel derecho: iframe del documento -->
+      <div class="doc-viewer-iframe-panel">
+        <iframe id="doc-viewer-iframe" src="" title="Documento del aspirante"></iframe>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
