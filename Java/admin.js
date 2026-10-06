@@ -149,8 +149,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      if (res.ok) showToast('Convocatoria actualizada');
-      else showToast('Error al actualizar', 'error');
+      if (res.ok) {
+        showToast('Convocatoria actualizada');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || 'Error al actualizar', 'error');
+      }
     } catch (err) {
       showToast('Error de red', 'error');
     }
