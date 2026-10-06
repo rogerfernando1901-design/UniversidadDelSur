@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btnUploadAll.textContent = 'Subir Todos los Documentos Seleccionados';
             btnUploadAll.onclick = async () => {
                 if (Object.keys(selectedFiles).length < pendingDocsCount) {
-                    alert('Debes seleccionar un archivo para TODOS los documentos pendientes antes de poder subirlos. (RF-17)');
+                    alert('Debes seleccionar un archivo para TODOS los documentos pendientes antes de poder subirlos.');
                     return;
                 }
                 
