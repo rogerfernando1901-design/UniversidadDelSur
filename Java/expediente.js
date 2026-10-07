@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Populate Form Data
         const datos = currentExpediente.datos || {};
-        ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','curp','carrera'].forEach(id => {
+        ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','carrera'].forEach(id => {
             const el = document.getElementById(id);
             if (el && datos[id]) el.value = datos[id];
         });
@@ -78,111 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('loading-indicator').innerHTML = '<span style="color:var(--error);">Error al cargar expediente.</span>';
     }
 
-    // ── Lógica y Asistente de CURP ────────────────────────────
-    const curpInput = document.getElementById('curp');
-    const curpHint = document.getElementById('curp-hint');
-    const btnCalcularCurp = document.getElementById('btn-calcular-curp');
-
-    const validarCurpFormato = (valor) => {
-        const regex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/;
-        return regex.test(valor);
-    };
-
-    if (curpInput) {
-        curpInput.addEventListener('input', (e) => {
-            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 18);
-            e.target.value = raw;
-            if (curpHint) {
-                if (raw.length === 0) {
-                    curpHint.textContent = '18 caracteres alfanuméricos oficiales (RENAPO)';
-                    curpHint.style.color = 'var(--muted)';
-                } else if (raw.length === 18) {
-                    if (validarCurpFormato(raw)) {
-                        curpHint.innerHTML = '<span style="color:#16a34a; font-weight:700;">✓ Formato de CURP válido (18 caracteres)</span>';
-                    } else {
-                        curpHint.innerHTML = '<span style="color:#dc2626; font-weight:600;">⚠️ Revisa la estructura (18 caracteres oficiales)</span>';
-                    }
-                } else {
-                    curpHint.textContent = `${raw.length}/18 caracteres`;
-                    curpHint.style.color = 'var(--muted)';
-                }
-            }
-        });
-    }
-
-    if (btnCalcularCurp) {
-        btnCalcularCurp.addEventListener('click', () => {
-            const nombre = (document.getElementById('nombre')?.value || '').trim();
-            const apPaterno = (document.getElementById('apellidoPaterno')?.value || '').trim();
-            const apMaterno = (document.getElementById('apellidoMaterno')?.value || '').trim();
-            const fechaNac = (document.getElementById('fechaNacimiento')?.value || '').trim();
-
-            if (!nombre || !apPaterno || !fechaNac) {
-                showError('Ingresa primero Nombre, Apellido Paterno y Fecha de Nacimiento para generar tu CURP.');
-                return;
-            }
-
-            const cleanStr = (s) => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z]/g, '');
-
-            const n = cleanStr(nombre);
-            const p = cleanStr(apPaterno);
-            const m = cleanStr(apMaterno) || 'X';
-
-            // 1. Primera letra y primera vocal interna de paterno
-            const c1 = p.charAt(0) || 'X';
-            const vocales = p.slice(1).match(/[AEIOU]/);
-            const c2 = vocales ? vocales[0] : 'X';
-
-            // 2. Primera letra de materno
-            const c3 = m.charAt(0) || 'X';
-
-            // 3. Primera letra del nombre (ignorar José o María si hay segundo nombre)
-            let primerNombre = n.split(/\s+/)[0] || 'X';
-            if ((primerNombre === 'JOSE' || primerNombre === 'MARIA') && n.split(/\s+/).length > 1) {
-                primerNombre = n.split(/\s+/)[1];
-            }
-            const c4 = primerNombre.charAt(0) || 'X';
-
-            // 4. Fecha AAMMDD (desde YYYY-MM-DD)
-            const partesFecha = fechaNac.split('-');
-            let fStr = '000000';
-            let anioNum = 2000;
-            if (partesFecha.length === 3) {
-                anioNum = parseInt(partesFecha[0], 10);
-                const aa = partesFecha[0].slice(2, 4);
-                const mm = partesFecha[1].padStart(2, '0');
-                const dd = partesFecha[2].padStart(2, '0');
-                fStr = `${aa}${mm}${dd}`;
-            }
-
-            // 5. Sexo
-            const nombresFemeninos = ['MARIA', 'AURORA', 'VANESSA', 'ANA', 'CARLA', 'DANIELA', 'SOFIA', 'VALERIA', 'CAMILA', 'FERNANDA', 'PAOLA', 'ANDREA', 'ELENA', 'LAURA', 'LUCIA', 'DIANA', 'GABRIELA'];
-            let sexo = 'H';
-            if (nombresFemeninos.some(fem => n.includes(fem)) || n.endsWith('A')) {
-                sexo = 'M';
-            }
-
-            // 6. Entidad federativa (YN por defecto para Sureste)
-            const entidad = 'YN';
-
-            // 7. Primeras consonantes internas no iniciales
-            const getConsonanteInterna = (str) => {
-                const match = str.slice(1).match(/[BCDFGHJKLMNPQRSTVWXYZ]/);
-                return match ? match[0] : 'X';
-            };
-            const cP = getConsonanteInterna(p);
-            const cM = getConsonanteInterna(m);
-            const cN = getConsonanteInterna(primerNombre);
-
-            // 8. Carácter de siglo (A para nacidos a partir de 2000, 0 para siglo XX)
-            const sigloChar = anioNum >= 2000 ? 'A' : '0';
-            const digitoVerif = '1';
-
-            const curpGenerada = `${c1}${c2}${c3}${c4}${fStr}${sexo}${entidad}${cP}${cM}${cN}${sigloChar}${digitoVerif}`;
-            curpInput.value = curpGenerada;
-            curpInput.dispatchEvent(new Event('input'));
-        });
-    }
 
     // Handlers
     document.getElementById('btn-save-draft').addEventListener('click', async () => {
@@ -199,13 +94,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const telInput = document.getElementById('telefono');
         const bachInput = document.getElementById('bachillerato');
         const carreraSelect = document.getElementById('carrera');
-        const curpInput = document.getElementById('curp');
+
 
         const errors = [];
         const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]{2,60}$/;
 
-        // Restablecer estilos de campos
-        [nombreInput, apPatInput, apMatInput, fnInput, telInput, bachInput, carreraSelect, curpInput].forEach(el => {
+        [nombreInput, apPatInput, apMatInput, fnInput, telInput, bachInput, carreraSelect].forEach(el => {
             if (el) el.style.borderColor = '';
         });
 
@@ -291,17 +185,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (carreraSelect) carreraSelect.style.borderColor = 'var(--error)';
         }
 
-        // 8. CURP (18 caracteres RENAPO)
-        const curpVal = (curpInput?.value || '').trim().toUpperCase();
-        const curpRegex = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/;
-        if (!curpVal) {
-            errors.push('La clave CURP es obligatoria.');
-            if (curpInput) curpInput.style.borderColor = 'var(--error)';
-        } else if (!curpRegex.test(curpVal)) {
-            errors.push('La CURP debe cumplir con el formato oficial de 18 caracteres de RENAPO (ej. MACA040819MYCNRN03).');
-            if (curpInput) curpInput.style.borderColor = 'var(--error)';
-        }
-
         // 9. Documentos obligatorios (los 4: acta_nacimiento, certificado_bachillerato, identificacion, comprobante_domicilio)
         const docsSubidos = currentExpediente.documentos || [];
         const requiredDocTypes = [
@@ -350,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formData = new FormData(form);
         const dataToSave = { datos: {} };
         
-        ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','curp','carrera'].forEach(key => {
+        ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','carrera'].forEach(key => {
             const raw = formData.get(key);
             if (raw !== null && raw !== undefined) {
                 let val = String(raw).trim();
@@ -396,12 +279,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             { tipo: 'acta_nacimiento', label: 'Acta de Nacimiento' },
             { tipo: 'certificado_bachillerato', label: 'Certificado de Bachillerato' },
             { tipo: 'identificacion', label: 'Identificación Oficial (INE/Pasaporte)' },
-            { tipo: 'comprobante_domicilio', label: 'Comprobante de Domicilio' }
+            { tipo: 'comprobante_domicilio', label: 'Comprobante de Domicilio' },
+            { tipo: 'curp', label: 'CURP' }
         ];
 
         container.innerHTML = '';
         
         const isLocked = !['borrador', 'con_observaciones'].includes(currentExpediente.estado);
+
+        let selectedFiles = {};
+        let pendingDocsCount = 0;
 
         requiredTypes.forEach(req => {
             const docInfo = docs.find(d => d.tipo === req.tipo);
@@ -424,12 +311,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let uploadHtml = '';
             if (canUpload) {
+                pendingDocsCount++;
                 uploadHtml = `
                     <div class="doc-actions">
-                        <label class="secondary" style="cursor:pointer; display:inline-block; font-size: 13px; padding: 6px 12px; border-radius: 4px;">
-                            ${docInfo ? 'Reemplazar Archivo' : 'Subir Archivo'}
+                        <label class="secondary btn-select-file" style="cursor:pointer; display:inline-block; font-size: 13px; padding: 6px 12px; border-radius: 4px;">
+                            ${docInfo ? 'Seleccionar Reemplazo' : 'Seleccionar Archivo'}
                             <input type="file" style="display:none;" accept=".pdf,.jpg,.jpeg,.png" data-tipo="${req.tipo}">
                         </label>
+                        <p class="file-name-display" style="font-size:12px; margin-top:6px; color:var(--primary); font-weight:600;"></p>
                     </div>
                 `;
             }
@@ -438,7 +327,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="flex:1;">
                     <h3 style="margin-bottom:8px;">${req.label}</h3>
                     ${statusHtml}
-                    ${docInfo ? `<p style="font-size:12px; margin-top:8px; color:var(--muted); word-break: break-all;">${docInfo.archivo}</p>` : ''}
+                    ${docInfo ? `<p style="font-size:12px; margin-top:8px; color:var(--muted); word-break: break-all;">Subido: ${docInfo.archivo}</p>` : ''}
                     ${obsHtml}
                 </div>
                 ${uploadHtml}
@@ -448,48 +337,80 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Attach file inputs
         container.querySelectorAll('input[type="file"]').forEach(input => {
-            input.addEventListener('change', async (e) => {
+            input.addEventListener('change', (e) => {
                 if (e.target.files.length === 0) return;
                 const file = e.target.files[0];
                 const tipo = e.target.dataset.tipo;
                 
                 if (file.size > 5 * 1024 * 1024) {
                     alert('El archivo excede el límite de 5MB.');
+                    e.target.value = '';
                     return;
                 }
 
-                const fd = new FormData();
-                fd.append('archivo', file);
-
-                try {
-                    // Update UI to show uploading
-                    const label = e.target.closest('label');
-                    const textNode = Array.from(label.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.nodeValue.trim() !== '');
-                    const origText = textNode ? textNode.nodeValue : '';
-                    if (textNode) textNode.nodeValue = 'Subiendo... ';
-                    
-                    const res = await fetch(`/api/expediente/documentos/${tipo}`, {
-                        method: 'POST',
-                        body: fd
-                    });
-                    
-                    if (res.ok) {
-                        // Reload data
-                        const expRes = await fetch('/api/expediente');
-                        currentExpediente = await expRes.json();
-                        renderDocuments(currentExpediente.documentos);
-                        applyLockingLogic(currentExpediente.estado, currentExpediente.observaciones || []);
-                    } else {
-                        const data = await res.json();
-                        alert('Error al subir: ' + (data.error || 'Desconocido'));
-                        if (textNode) textNode.nodeValue = origText;
-                    }
-                } catch (err) {
-                    alert('Error de red al subir archivo.');
-                    if (textNode) textNode.nodeValue = origText;
-                }
+                // RF-17: Guardar en memoria y actualizar UI, sin subir aún
+                selectedFiles[tipo] = file;
+                const containerDiv = e.target.closest('.doc-actions');
+                const nameDisplay = containerDiv.querySelector('.file-name-display');
+                nameDisplay.textContent = file.name;
+                
+                const label = containerDiv.querySelector('.btn-select-file');
+                label.style.background = '#F0FDF4';
+                label.style.border = '1px solid #4ADE80';
+                label.style.color = '#166534';
+                
+                const textNode = Array.from(label.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.nodeValue.trim() !== '');
+                if (textNode) textNode.nodeValue = 'Cambiar Selección ';
             });
         });
+
+        if (pendingDocsCount > 0) {
+            const btnContainer = document.createElement('div');
+            btnContainer.style.marginTop = '20px';
+            btnContainer.style.textAlign = 'right';
+            btnContainer.style.width = '100%';
+
+            const btnUploadAll = document.createElement('button');
+            btnUploadAll.className = 'btn btn-primary';
+            btnUploadAll.textContent = 'Subir Todos los Documentos Seleccionados';
+            btnUploadAll.onclick = async () => {
+                if (Object.keys(selectedFiles).length < pendingDocsCount) {
+                    alert('Debes seleccionar un archivo para TODOS los documentos pendientes antes de poder subirlos.');
+                    return;
+                }
+                
+                btnUploadAll.textContent = 'Subiendo...';
+                btnUploadAll.disabled = true;
+
+                try {
+                    for (const [tipo, file] of Object.entries(selectedFiles)) {
+                        const fd = new FormData();
+                        fd.append('archivo', file);
+                        const res = await fetch(`/api/expediente/documentos/${tipo}`, {
+                            method: 'POST',
+                            body: fd
+                        });
+                        if (!res.ok) {
+                            const data = await res.json();
+                            alert(`Error al subir ${tipo}: ` + (data.error || 'Desconocido'));
+                        }
+                    }
+                    
+                    alert('Todos los documentos fueron subidos exitosamente.');
+                    // Reload data
+                    const expRes = await fetch('/api/expediente');
+                    currentExpediente = await expRes.json();
+                    renderDocuments(currentExpediente.documentos);
+                    applyLockingLogic(currentExpediente.estado, currentExpediente.observaciones || []);
+                } catch (err) {
+                    alert('Error de red al subir archivos.');
+                    btnUploadAll.textContent = 'Subir Todos los Documentos Seleccionados';
+                    btnUploadAll.disabled = false;
+                }
+            };
+            btnContainer.appendChild(btnUploadAll);
+            container.appendChild(btnContainer);
+        }
     }
 
     function applyLockingLogic(estado, observaciones) {

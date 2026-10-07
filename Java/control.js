@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion', 'comprobante_domicilio'];
+    const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion', 'comprobante_domicilio', 'curp'];
     const isRevisable = currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision';
 
     docTipos.forEach(tipo => {
@@ -456,10 +456,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     actionBar.innerHTML = '';
     
     if (currentExpediente.estado === 'enviada' || currentExpediente.estado === 'en_revision') {
+      // RF-18 Validación Masiva
+      const btnApproveAll = document.createElement('button');
+      btnApproveAll.className = 'btn btn-secondary';
+      btnApproveAll.style.background = '#F0FDF4';
+      btnApproveAll.style.color = '#166534';
+      btnApproveAll.style.border = '1px solid #4ADE80';
+      btnApproveAll.style.marginRight = '12px';
+      btnApproveAll.textContent = 'Aprobar Todos Masivamente';
+      btnApproveAll.onclick = () => {
+        showModal('Aprobar Todos', '¿Estás seguro de que deseas aprobar masivamente TODOS los documentos de este expediente en una sola acción conjunta?', async () => {
+          const docTipos = ['acta_nacimiento', 'certificado_bachillerato', 'identificacion', 'comprobante_domicilio', 'curp'];
+          revisiones = [];
+          docTipos.forEach(tipo => {
+            const docInfo = (currentExpediente.documentos || []).find(d => d.tipo === tipo);
+            if (docInfo && (docInfo.estado === 'en_revision' || currentExpediente.estado === 'enviada')) {
+              revisiones.push({ campo: tipo, aprobado: true, observacion: '' });
+            }
+          });
+          if (revisiones.length > 0) {
+            await submitReview(true); // Llamamos a submitReview pasándole true para que no lea el DOM
+          } else {
+            showToast('No hay documentos pendientes para aprobar.', 'error');
+          }
+        });
+      };
+      actionBar.appendChild(btnApproveAll);
+
       const btnReview = document.createElement('button');
       btnReview.className = 'btn btn-primary';
       btnReview.textContent = 'Enviar Revisión';
-      btnReview.onclick = submitReview;
+      btnReview.onclick = () => submitReview(false);
       actionBar.appendChild(btnReview);
     }
     
@@ -475,25 +502,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  const submitReview = async () => {
-    const docsCards = docsContainer.querySelectorAll('.review-doc');
-    let hasError = false;
-    
-    revisiones = [];
-    docsCards.forEach(card => {
-      if (card.getReviewData) {
-        const data = card.getReviewData();
-        if (data) {
-          if (!data.aprobado && !data.observacion.trim()) {
-            showToast(`Falta observación para documento rechazado: ${data.campo}`, 'error');
-            hasError = true;
+  const submitReview = async (isMassApprove = false) => {
+    if (!isMassApprove) {
+      const docsCards = docsContainer.querySelectorAll('.review-doc');
+      let hasError = false;
+      
+      revisiones = [];
+      docsCards.forEach(card => {
+        if (card.getReviewData) {
+          const data = card.getReviewData();
+          if (data) {
+            if (!data.aprobado && !data.observacion.trim()) {
+              showToast(`Falta observación para documento rechazado: ${data.campo}`, 'error');
+              hasError = true;
+            }
+            revisiones.push(data);
           }
-          revisiones.push(data);
         }
-      }
-    });
-
-    if (hasError) return;
+      });
+      if (hasError) return;
+    }
 
     if (revisiones.length === 0 && observacionesDatos.length === 0) {
       showToast('Debes revisar al menos un documento o agregar una observación.', 'error');
@@ -527,7 +555,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await res.json();
       if (data.ok) {
         showToast('Inscripción confirmada');
-        openDetail(currentExpediente.id); // Reload
+        window.location.href = '/Paginas/control.html';
       } else {
         showToast('Error al confirmar', 'error');
       }

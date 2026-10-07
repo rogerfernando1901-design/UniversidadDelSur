@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Calculate progress
         let filledFields = 0;
-        const requiredFields = ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','curp','carrera'];
+        const requiredFields = ['nombre','apellidoPaterno','apellidoMaterno','fechaNacimiento','telefono','bachillerato','carrera'];
         requiredFields.forEach(f => {
             if (expediente.datos[f]) filledFields++;
         });
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             docsCount = expediente.documentos.length;
         }
         
-        const totalItems = requiredFields.length + 4; // 4 docs required (incluyendo comprobante de domicilio)
+        const totalItems = requiredFields.length + 5; // 5 docs required (incluyendo comprobante de domicilio y curp)
         const totalCompleted = filledFields + docsCount;
         const progress = Math.round((totalCompleted / totalItems) * 100);
         
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('expediente-summary').innerHTML = `
             <strong>${filledFields} de ${requiredFields.length}</strong> datos personales completos.<br>
-            <strong>${docsCount} de 4</strong> documentos subidos.
+            <strong>${docsCount} de 5</strong> documentos subidos.
         `;
 
         // Docs summary
@@ -115,6 +115,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             'confirmada': 'Proceso completado con éxito. Eres oficialmente alumno de la universidad. ¡Bienvenido!'
         };
         document.getElementById('status-description').textContent = descMap[expediente.estado] || 'Estado desconocido.';
+
+        // RF-14: Cancelar inscripción
+        const cancelContainer = document.getElementById('cancel-action-container');
+        const btnCancel = document.getElementById('btn-cancel-enrollment');
+        if (cancelContainer && btnCancel) {
+            if (['enviada', 'en_revision', 'con_observaciones'].includes(expediente.estado)) {
+                cancelContainer.style.display = 'block';
+                btnCancel.onclick = async () => {
+                    if (!confirm('¿Estás seguro de que deseas cancelar tu envío actual para modificar tus datos? Esto regresará tu solicitud a estado de borrador.')) return;
+                    btnCancel.disabled = true;
+                    btnCancel.textContent = 'Cancelando...';
+                    try {
+                        const res = await fetch('/api/expediente/cancelar', { method: 'POST' });
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            const data = await res.json();
+                            alert(data.error || 'Error al cancelar la inscripción.');
+                            btnCancel.disabled = false;
+                            btnCancel.textContent = 'Cancelar Inscripción y Editar Datos';
+                        }
+                    } catch (e) {
+                        alert('Error de red al intentar cancelar.');
+                        btnCancel.disabled = false;
+                        btnCancel.textContent = 'Cancelar Inscripción y Editar Datos';
+                    }
+                };
+            } else {
+                cancelContainer.style.display = 'none';
+            }
+        }
 
         // History timeline
         const timeline = document.getElementById('history-timeline');

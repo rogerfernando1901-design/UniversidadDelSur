@@ -46,7 +46,7 @@
                 <h2>1. Datos Personales</h2>
                 <div class="form-grid">
                     <div class="field">
-                        <label for="nombre">Nombre(s) *</label>
+                        <label for="nombre">Nombres *</label>
                         <input type="text" id="nombre" name="nombre" required minlength="2" maxlength="60" placeholder="Ej. Juan Carlos">
                     </div>
                     <div class="field">
@@ -65,14 +65,7 @@
                         <label for="telefono">Teléfono (10 dígitos) *</label>
                         <input type="tel" id="telefono" name="telefono" required pattern="[0-9]{10}" maxlength="10" placeholder="Ej. 9611234567">
                     </div>
-                    <div class="field">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <label for="curp" style="margin-bottom:0;">CURP *</label>
-                            <button type="button" id="btn-calcular-curp" style="background:none; border:none; color:var(--blue); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;">⚡ Generar con mis datos</button>
-                        </div>
-                        <input type="text" id="curp" name="curp" maxlength="18" required placeholder="Ej. MACA040819MYCNRN03" style="text-transform:uppercase;" autocomplete="off">
-                        <small id="curp-hint" style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">18 caracteres alfanuméricos oficiales (RENAPO)</small>
-                    </div>
+
                 </div>
             </div>
 

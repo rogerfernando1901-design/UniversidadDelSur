@@ -509,7 +509,9 @@ app.get("/api/convocatoria", (_req, res) => {
 
 app.get("/api/carreras", (_req, res) => {
   const carreras = readList("carreras.json");
-  res.json(carreras.map(c => ({ ...c, disponible: c.cupo - c.inscritos })));
+  // RF-23: Si una carrera tiene alumnos pero fue "eliminada", se marca como activa = false
+  const carrerasDisponibles = carreras.filter(c => c.activa !== false);
+  res.json(carrerasDisponibles.map(c => ({ ...c, disponible: c.cupo - c.inscritos })));
 });
 
 /* ═══════════════════════════════════════════════════════════
@@ -535,7 +537,7 @@ app.put("/api/expediente", requireRole("aspirante"), (req, res) => {
     return res.status(400).json({ error: "Tu solicitud ya fue enviada y no se puede editar libremente." });
   }
 
-  const campos = ["nombre", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento", "telefono", "bachillerato", "curp", "carrera"];
+  const campos = ["nombre", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento", "telefono", "bachillerato", "carrera"];
 
   // Si tiene observaciones, solo se pueden editar campos señalados
   if (exp.estado === "con_observaciones") {
@@ -649,20 +651,13 @@ function validarExpedienteGeneral(datos, documentos, estado) {
     }
   }
 
-  // 8. CURP (18 caracteres RENAPO)
-  const curpVal = String(datos.curp || "").trim().toUpperCase();
-  if (!curpVal) {
-    errores.push("La clave CURP es obligatoria para proceder con el trámite.");
-  } else if (!curpRegex.test(curpVal)) {
-    errores.push("La CURP debe tener el formato oficial de 18 caracteres de RENAPO (ej. MACA040819MYCNRN03).");
-  }
-
-  // 9. Documentos obligatorios (los 4: acta_nacimiento, certificado_bachillerato, identificacion, comprobante_domicilio)
+  // 8. Documentos obligatorios (los 5: acta_nacimiento, certificado_bachillerato, identificacion, comprobante_domicilio, curp)
   const docsRequeridos = [
     { tipo: "acta_nacimiento", nombre: "Acta de Nacimiento" },
     { tipo: "certificado_bachillerato", nombre: "Certificado de Bachillerato" },
     { tipo: "identificacion", nombre: "Identificación Oficial" },
-    { tipo: "comprobante_domicilio", nombre: "Comprobante de Domicilio" }
+    { tipo: "comprobante_domicilio", nombre: "Comprobante de Domicilio" },
+    { tipo: "curp", nombre: "CURP" }
   ];
   const docsSubidos = Array.isArray(documentos) ? documentos : [];
   for (const docReq of docsRequeridos) {
@@ -729,6 +724,27 @@ app.post("/api/expediente/enviar", requireRole("aspirante"), (req, res) => {
   res.json({ ok: true, folio: exp.folio, expediente: exp });
 });
 
+// RF-14: Cancelar inscripción y habilitar edición
+app.post("/api/expediente/cancelar", requireRole("aspirante"), (req, res) => {
+  const expedientes = readList("expedientes.json");
+  const idx = expedientes.findIndex(e => e.userId === req.session.userId);
+  if (idx === -1) return res.status(404).json({ error: "No se encontró tu expediente." });
+
+  const exp = expedientes[idx];
+  // Solo se puede cancelar si no está ya aprobada o confirmada
+  if (["aprobada", "confirmada"].includes(exp.estado)) {
+    return res.status(400).json({ error: "No puedes cancelar la inscripción en esta etapa." });
+  }
+
+  exp.estado = "borrador";
+  exp.updatedAt = new Date().toISOString();
+  exp.historial.push({ estado: "borrador", fecha: new Date().toISOString(), nota: "Inscripción cancelada por el aspirante para modificación de datos." });
+
+  expedientes[idx] = exp;
+  writeJSON("expedientes.json", expedientes);
+  res.json({ ok: true, expediente: exp });
+});
+
 // Subir documento
 app.post("/api/expediente/documentos/:tipo", requireRole("aspirante"), (req, res) => {
   const expedientes = readList("expedientes.json");
@@ -745,7 +761,7 @@ app.post("/api/expediente/documentos/:tipo", requireRole("aspirante"), (req, res
     }
   }
 
-  const tiposValidos = ["acta_nacimiento", "certificado_bachillerato", "identificacion", "comprobante_domicilio"];
+  const tiposValidos = ["acta_nacimiento", "certificado_bachillerato", "identificacion", "comprobante_domicilio", "curp"];
   if (!tiposValidos.includes(req.params.tipo)) {
     return res.status(400).json({ error: "Tipo de documento no válido." });
   }
@@ -1020,6 +1036,44 @@ app.put("/api/admin/convocatoria", requireRole("admin"), (req, res) => {
   }
 
   const conv = readObj("convocatoria.json");
+
+  // Validaciones RF-25 y RF-26
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  
+  const parseLocal = (s) => {
+    if (!s) return null;
+    const [y, m, d] = s.split('-');
+    return new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0, 0);
+  };
+
+  const fAper = parseLocal(req.body.fechaApertura);
+  const fCier = parseLocal(req.body.fechaCierreRecepcion);
+  const fCor = parseLocal(req.body.fechaCierreCorrecciones);
+
+  // RF-25: No fechas pasadas (solo validamos si el admin las está cambiando a un valor distinto)
+  if (req.body.fechaApertura && req.body.fechaApertura !== conv.fechaApertura && fAper < now) {
+    return res.status(400).json({ error: "La nueva fecha de apertura no puede estar en el pasado (RF-25)." });
+  }
+  if (req.body.fechaCierreRecepcion && req.body.fechaCierreRecepcion !== conv.fechaCierreRecepcion && fCier < now) {
+    return res.status(400).json({ error: "La nueva fecha de cierre de recepción no puede estar en el pasado (RF-25)." });
+  }
+  if (req.body.fechaCierreCorrecciones && req.body.fechaCierreCorrecciones !== conv.fechaCierreCorrecciones && fCor < now) {
+    return res.status(400).json({ error: "La nueva fecha de cierre de correcciones no puede estar en el pasado (RF-25)." });
+  }
+
+  // RF-26: Cierre >= Apertura
+  const finalAper = fAper || parseLocal(conv.fechaApertura);
+  const finalCier = fCier || parseLocal(conv.fechaCierreRecepcion);
+  const finalCor = fCor || parseLocal(conv.fechaCierreCorrecciones);
+
+  if (finalAper && finalCier && finalCier < finalAper) {
+    return res.status(400).json({ error: "La fecha de cierre de recepción no puede ser menor a la de apertura (RF-26)." });
+  }
+  if (finalCier && finalCor && finalCor < finalCier) {
+    return res.status(400).json({ error: "La fecha de cierre de correcciones no puede ser menor al cierre de recepción." });
+  }
+
   const campos = ["activa", "fechaApertura", "fechaCierreRecepcion", "fechaCierreCorrecciones", "costo"];
   for (const c of campos) {
     if (req.body[c] !== undefined) conv[c] = req.body[c];
@@ -1035,14 +1089,14 @@ app.get("/api/admin/carreras", requireRole("admin"), (_req, res) => {
 
 // Agregar carrera
 app.post("/api/admin/carreras", requireRole("admin"), (req, res) => {
-  const { nombre, campus, modalidad, cupo } = req.body;
-  if (!nombre || !campus || !modalidad || !cupo) return res.status(400).json({ error: "Todos los campos son obligatorios." });
+  const { nombre, campus, modalidad, cupo, planEstudios, configuracionesAvanzadas } = req.body;
+  if (!nombre || !campus || !modalidad || !cupo) return res.status(400).json({ error: "Todos los campos obligatorios deben ser proporcionados." });
   const cupoNum = parseInt(cupo, 10);
   if (!Number.isInteger(cupoNum) || cupoNum <= 0) return res.status(400).json({ error: "El cupo debe ser un número entero positivo." });
   const carreras = readList("carreras.json");
   const id = nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
   if (carreras.find(c => c.id === id)) return res.status(409).json({ error: "Ya existe una carrera con ese nombre." });
-  const carrera = { id, nombre, campus, modalidad, cupo: parseInt(cupo, 10), inscritos: 0 };
+  const carrera = { id, nombre, campus, modalidad, cupo: cupoNum, inscritos: 0, planEstudios: planEstudios || "", configuracionesAvanzadas: configuracionesAvanzadas || "" };
   carreras.push(carrera);
   writeJSON("carreras.json", carreras);
   res.json({ ok: true, carrera });
@@ -1057,7 +1111,7 @@ app.put("/api/admin/carreras/:id", requireRole("admin"), (req, res) => {
   const carreras = readList("carreras.json");
   const idx = carreras.findIndex(c => c.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: "Carrera no encontrada." });
-  const campos = ["nombre", "campus", "modalidad", "cupo"];
+  const campos = ["nombre", "campus", "modalidad", "cupo", "planEstudios", "configuracionesAvanzadas"];
   for (const c of campos) {
     if (req.body[c] !== undefined) carreras[idx][c] = c === "cupo" ? parseInt(req.body[c], 10) : req.body[c];
   }
@@ -1065,7 +1119,24 @@ app.put("/api/admin/carreras/:id", requireRole("admin"), (req, res) => {
   res.json({ ok: true, carrera: carreras[idx] });
 });
 
-// Estadísticas
+// Eliminar carrera
+app.delete("/api/admin/carreras/:id", requireRole("admin"), (req, res) => {
+  const carreras = readList("carreras.json");
+  const idx = carreras.findIndex(c => c.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: "Carrera no encontrada." });
+  
+  if (carreras[idx].inscritos > 0) {
+    // RF-23: No eliminar si tiene alumnos, solo marcarla como no disponible
+    carreras[idx].activa = false;
+    writeJSON("carreras.json", carreras);
+    return res.json({ ok: true, mensaje: "La carrera tiene alumnos inscritos, por lo que solo se ha desactivado (no disponible para nuevos registros)." });
+  } else {
+    // Si no tiene alumnos, se elimina
+    carreras.splice(idx, 1);
+    writeJSON("carreras.json", carreras);
+    return res.json({ ok: true, mensaje: "Carrera eliminada exitosamente." });
+  }
+});
 app.get("/api/admin/estadisticas", requireRole("admin"), (_req, res) => {
   const expedientes = readList("expedientes.json");
   const carreras = readList("carreras.json");
@@ -1073,9 +1144,11 @@ app.get("/api/admin/estadisticas", requireRole("admin"), (_req, res) => {
   const stats = {
     totalAspirantes: usuarios.filter(u => u.role === "aspirante").length,
     expedientesPorEstado: {},
-    carrerasResumen: Object.fromEntries(
-      carreras.map(c => [c.nombre, c.cupo - c.inscritos])
-    )
+    carrerasResumen: carreras.map(c => ({
+      nombre: c.nombre,
+      disponible: c.cupo - c.inscritos,
+      cupo: c.cupo
+    }))
   };
   for (const e of expedientes) {
     stats.expedientesPorEstado[e.estado] = (stats.expedientesPorEstado[e.estado] || 0) + 1;

@@ -81,49 +81,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       const container = document.getElementById('stats-container');
       container.innerHTML = '';
-      const totalCard = document.createElement('div');
-      totalCard.className = 'stat-card';
-      totalCard.innerHTML = `<div class="number">${data.totalAspirantes || 0}</div><div>Total Aspirantes</div>`;
-      container.appendChild(totalCard);
 
       if (data.carrerasResumen) {
-        Object.entries(data.carrerasResumen).forEach(([carrera, disponible]) => {
+        data.carrerasResumen.forEach(c => {
           const card = document.createElement('div');
           card.className = 'stat-card';
           
           const numDiv = document.createElement('div');
           numDiv.className = 'number';
-          numDiv.textContent = disponible;
+          numDiv.textContent = `${c.disponible}/${c.cupo}`;
           
           const nameDiv = document.createElement('div');
-          nameDiv.textContent = `${carrera} (disponibles)`;
+          nameDiv.textContent = `${c.nombre} (disponibles)`;
           
           card.appendChild(numDiv);
           card.appendChild(nameDiv);
           container.appendChild(card);
-        });
-      }
-
-      // Total inscritos count
-      const confirmadasCount = (data.expedientesPorEstado && data.expedientesPorEstado['confirmada']) || 0;
-      if (confirmadasCount > 0) {
-        const card = document.createElement('div');
-        card.className = 'stat-card';
-        const numDiv = document.createElement('div');
-        numDiv.className = 'number';
-        numDiv.textContent = confirmadasCount;
-        const nameDiv = document.createElement('div');
-        nameDiv.textContent = 'Inscritos Confirmados';
-        card.appendChild(numDiv);
-        card.appendChild(nameDiv);
-        container.appendChild(card);
-      }
-      
-      const ul = document.getElementById('stats-estados');
-      ul.innerHTML = '';
-      if (data.expedientesPorEstado) {
-        Object.entries(data.expedientesPorEstado).forEach(([k, v]) => {
-          ul.innerHTML += `<li><strong>${k.replace('_', ' ').toUpperCase()}:</strong> ${v}</li>`;
         });
       }
     } catch (err) {
@@ -136,10 +109,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const res = await fetch('/api/admin/convocatoria');
       const data = await res.json();
+      
+      const today = new Date();
+      // Ajuste local para obtener el string YYYY-MM-DD correcto de "hoy"
+      const offset = today.getTimezoneOffset() * 60000;
+      const todayStr = (new Date(today - offset)).toISOString().split('T')[0];
+      
+      const setDateAndMin = (id, val) => {
+        const el = document.getElementById(id);
+        el.value = formatDateForInput(val);
+        el.min = todayStr; // Bloquea en el calendario visual la selección de fechas pasadas
+      };
+
       document.getElementById('conv-activa').checked = data.activa;
-      document.getElementById('conv-apertura').value = formatDateForInput(data.fechaApertura);
-      document.getElementById('conv-cierre-rec').value = formatDateForInput(data.fechaCierreRecepcion);
-      document.getElementById('conv-cierre-cor').value = formatDateForInput(data.fechaCierreCorrecciones);
+      setDateAndMin('conv-apertura', data.fechaApertura);
+      setDateAndMin('conv-cierre-rec', data.fechaCierreRecepcion);
+      setDateAndMin('conv-cierre-cor', data.fechaCierreCorrecciones);
+      
       const costoInput = document.getElementById('conv-costo');
       if (costoInput) costoInput.value = data.costo || 'Gratuito';
     } catch (err) {
@@ -163,8 +149,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      if (res.ok) showToast('Convocatoria actualizada');
-      else showToast('Error al actualizar', 'error');
+      if (res.ok) {
+        showToast('Convocatoria actualizada');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || 'Error al actualizar', 'error');
+      }
     } catch (err) {
       showToast('Error de red', 'error');
     }
@@ -183,7 +173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tr = document.createElement('tr');
         
         const tdNombre = document.createElement('td');
-        tdNombre.textContent = c.nombre;
+        tdNombre.textContent = c.nombre + (c.activa === false ? ' (No disponible)' : '');
+        if (c.activa === false) tdNombre.style.color = 'var(--error)';
         tr.appendChild(tdNombre);
         
         const tdCampus = document.createElement('td');
@@ -198,6 +189,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         tdCupo.textContent = c.cupo;
         tr.appendChild(tdCupo);
         
+        const tdPlan = document.createElement('td');
+        if (c.planEstudios) {
+          const a = document.createElement('a');
+          a.href = c.planEstudios;
+          a.target = '_blank';
+          a.textContent = 'Ver Plan';
+          tdPlan.appendChild(a);
+        } else {
+          tdPlan.textContent = '-';
+        }
+        tr.appendChild(tdPlan);
+        
         const tdInscritos = document.createElement('td');
         tdInscritos.textContent = c.inscritos || 0;
         tr.appendChild(tdInscritos);
@@ -207,17 +210,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         tr.appendChild(tdDisponible);
         
         const tdAction = document.createElement('td');
+        tdAction.style.display = 'flex';
+        tdAction.style.gap = '8px';
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn btn-secondary btn-edit-car';
         btnEdit.dataset.id = c.id;
         btnEdit.textContent = 'Editar';
+        
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn btn-secondary btn-del-car';
+        btnDel.dataset.id = c.id;
+        btnDel.textContent = 'Eliminar';
+        btnDel.style.background = '#FEF2F2';
+        btnDel.style.color = '#991B1B';
+        btnDel.style.borderColor = '#FECACA';
+        
         tdAction.appendChild(btnEdit);
+        tdAction.appendChild(btnDel);
         tr.appendChild(tdAction);
         
         tbody.appendChild(tr);
       });
       document.querySelectorAll('.btn-edit-car').forEach(btn => {
         btn.addEventListener('click', (e) => editCarrera(e.target.dataset.id));
+      });
+      document.querySelectorAll('.btn-del-car').forEach(btn => {
+        btn.addEventListener('click', (e) => deleteCarrera(e.target.dataset.id));
       });
     } catch (err) {
       console.error(err);
@@ -245,8 +263,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('car-campus').value = c.campus;
     document.getElementById('car-modalidad').value = c.modalidad;
     document.getElementById('car-cupo').value = c.cupo;
+    document.getElementById('car-plan').value = c.planEstudios || '';
+    document.getElementById('car-config').value = c.configuracionesAvanzadas || '';
     document.getElementById('form-carrera-title').textContent = 'Editar Carrera';
     containerCarrera.style.display = 'block';
+  };
+
+  const deleteCarrera = (id) => {
+    const c = carrerasData.find(x => x.id === id || x.id == id);
+    if (!c) return;
+    showModal('Eliminar Carrera', `¿Estás seguro de eliminar la carrera ${c.nombre}?`, async () => {
+      try {
+        const res = await fetch(`/api/admin/carreras/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.mensaje || 'Acción completada');
+          loadCarreras();
+        } else {
+          showToast(data.error || 'Error al eliminar', 'error');
+        }
+      } catch (err) {
+        showToast('Error de red', 'error');
+      }
+    });
   };
 
   formCarrera.addEventListener('submit', async (e) => {
@@ -256,7 +295,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       nombre: document.getElementById('car-nombre').value,
       campus: document.getElementById('car-campus').value,
       modalidad: document.getElementById('car-modalidad').value,
-      cupo: parseInt(document.getElementById('car-cupo').value, 10)
+      cupo: parseInt(document.getElementById('car-cupo').value, 10),
+      planEstudios: document.getElementById('car-plan').value.trim(),
+      configuracionesAvanzadas: document.getElementById('car-config').value.trim()
     };
     
     const method = id ? 'PUT' : 'POST';
